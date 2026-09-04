@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>DeepGrow 汇率中心 · FX加点配置原型 v1859（单文件）</title>
+  <title>DeepGrow 汇率中心 · FX加点配置原型 v1864（单文件）</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -180,6 +180,9 @@ h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
   position: relative;
   overflow: hidden;
 }
+.stat:has(.stat-action) {
+  padding-right: 72px;
+}
 .stat::after {
   content: "";
   position: absolute;
@@ -193,6 +196,25 @@ h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
 .stat-value { font-size: 26px; letter-spacing: -0.03em; }
 .stat-value.sm { font-size: 15px; line-height: 1.35; font-weight: 600; }
 .stat-hint { display: block; margin-top: 6px; font-size: 12px; color: var(--ink-soft); }
+.stat-action {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  z-index: 1;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-deep);
+}
+.stat-action:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
 .field-hint { font-size: 12px; color: var(--ink-soft); }
 .filter-input {
   padding: 10px 12px;
@@ -511,7 +533,45 @@ h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
   box-shadow: var(--shadow);
   animation: pop 0.28s cubic-bezier(.2,.8,.2,1);
 }
+.modal-card-wide { width: min(560px, calc(100% - 32px)); }
 .modal-desc { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.5; }
+.import-steps { display: flex; flex-direction: column; gap: 14px; }
+.import-step {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+.import-step em {
+  font-style: normal;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+.file-drop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 88px;
+  padding: 14px;
+  border: 1px dashed rgba(15, 118, 110, 0.35);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(15,118,110,0.06), rgba(15,118,110,0.02));
+  cursor: pointer;
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 13px;
+  position: relative;
+}
+.file-drop input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.file-drop:hover { border-color: var(--accent); color: var(--accent-deep); }
 
 .toast {
   position: fixed;
@@ -575,7 +635,7 @@ h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
         <div class="brand-mark" aria-hidden="true"></div>
         <div>
           <div class="brand-name">DeepGrow</div>
-          <div class="brand-sub">汇率中心 · v1859 · 单文件原型</div>
+          <div class="brand-sub">汇率中心 · v1864 · 单文件原型</div>
         </div>
       </div>
       <nav class="nav">
@@ -689,8 +749,9 @@ h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
             <p class="desc">按币种配置 FX 加点（百分比）。未单独配置的币种走全局默认加点。</p>
           </div>
           <div class="top-actions">
+            <button type="button" class="btn ghost" id="btnAddCurrency">新增币种</button>
+            <button type="button" class="btn ghost" id="btnImportCurrency">批量导入币种</button>
             <button type="button" class="btn ghost" id="btnExportMarkup">导出</button>
-            <button type="button" class="btn primary" id="btnEditDefault">全局默认加点</button>
           </div>
         </header>
 
@@ -702,11 +763,13 @@ h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
           <article class="stat">
             <span class="stat-label">全局默认加点（不包含USD）</span>
             <strong class="stat-value mono" id="statDefault">—</strong>
+            <button type="button" class="stat-action" id="btnStatEditDefault">修改</button>
           </article>
           <article class="stat">
             <span class="stat-label">当前USD加点值</span>
             <strong class="stat-value mono" id="usdMarkupValue">—</strong>
             <span class="stat-hint" id="usdMarkupHint">默认不加点，请按需配置</span>
+            <button type="button" class="stat-action" id="btnStatEditUsd">修改</button>
           </article>
           <article class="stat warn">
             <span class="stat-label">走默认加点</span>
@@ -892,7 +955,87 @@ h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
     </div>
   </div>
 
+  <div class="modal" id="addCurrencyModal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <div class="drawer-head">
+        <div>
+          <p class="eyebrow">FX 加点配置</p>
+          <h2>新增币种</h2>
+        </div>
+        <button type="button" class="icon-btn" id="addCurrencyClose" aria-label="关闭">✕</button>
+      </div>
+      <form id="addCurrencyForm" class="drawer-body">
+        <p class="modal-desc">从可选币种中选择后，系统自动带出币种名称；提交后加入可配置列表。</p>
+        <label class="field">
+          <span>币种</span>
+          <select id="addCurrencyCode" required>
+            <option value="">请选择币种</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>币种名称</span>
+          <input id="addCurrencyName" type="text" readonly placeholder="选择币种后自动带出" />
+        </label>
+        <label class="field">
+          <span>汇率来源</span>
+          <select id="addCurrencySource" required>
+            <option value="XE" selected>XE</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>FX加点值（%）（可选）</span>
+          <input id="addCurrencyMarkup" class="mono" type="number" step="any" min="0" placeholder="不填则走全局默认" />
+        </label>
+        <div class="drawer-actions">
+          <button type="button" class="btn ghost" id="addCurrencyCancel">取消</button>
+          <button type="submit" class="btn primary">确认并提交</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="importCurrencyModal" hidden>
+    <div class="modal-card modal-card-wide" role="dialog" aria-modal="true">
+      <div class="drawer-head">
+        <div>
+          <p class="eyebrow">FX 加点配置</p>
+          <h2>批量导入币种</h2>
+        </div>
+        <button type="button" class="icon-btn" id="importCurrencyClose" aria-label="关闭">✕</button>
+      </div>
+      <form id="importCurrencyForm" class="drawer-body">
+        <p class="modal-desc">请先下载模板，按模板填写后上传 Excel（.xlsx / .xls）或 CSV。币种、币种名称为必填；汇率来源默认 XE（当前仅支持 XE）；FX加点值选填，未填则走全局默认。</p>
+        <div class="import-steps">
+          <div class="import-step">
+            <strong>1. 下载模板</strong>
+            <button type="button" class="btn secondary" id="btnDownloadImportTemplate">下载导入模板</button>
+            <em>模板字段：币种、币种名称、汇率来源、FX加点值</em>
+          </div>
+          <label class="field">
+            <span>默认汇率来源（文件未填时使用）</span>
+            <select id="importDefaultSource" required>
+              <option value="XE" selected>XE</option>
+            </select>
+          </label>
+          <div class="import-step">
+            <strong>2. 上传文件</strong>
+            <label class="file-drop">
+              <input id="importCurrencyFile" type="file" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv" required />
+              <span id="importFileLabel">点击选择或拖拽文件到此处</span>
+            </label>
+          </div>
+        </div>
+        <p class="scope-hint" id="importHint" hidden></p>
+        <div class="drawer-actions">
+          <button type="button" class="btn ghost" id="importCurrencyCancel">取消</button>
+          <button type="submit" class="btn primary">确认并提交</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <div class="toast" id="toast" hidden></div>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <script>
 const DEFAULT_SOURCE = "XE";
 
@@ -1330,6 +1473,259 @@ function closeModal() {
   $("#modal").hidden = true;
 }
 
+/** 可选新增币种目录（不含已在列表中的币种） */
+const CURRENCY_CATALOG = [
+  { code: "PLN", name: "波兰兹罗提" },
+  { code: "DKK", name: "丹麦克朗" },
+  { code: "NOK", name: "挪威克朗" },
+  { code: "SEK", name: "瑞典克朗" },
+  { code: "ZAR", name: "南非兰特" },
+  { code: "RUB", name: "俄罗斯卢布" },
+  { code: "CZK", name: "捷克克朗" },
+  { code: "HUF", name: "匈牙利福林" },
+  { code: "ILS", name: "以色列新谢克尔" },
+  { code: "EGP", name: "埃及镑" },
+  { code: "NGN", name: "尼日利亚奈拉" },
+  { code: "KES", name: "肯尼亚先令" },
+  { code: "PKR", name: "巴基斯坦卢比" },
+  { code: "BDT", name: "孟加拉塔卡" },
+  { code: "LKR", name: "斯里兰卡卢比" },
+  { code: "KHR", name: "柬埔寨瑞尔" },
+  { code: "LAK", name: "老挝基普" },
+  { code: "MMK", name: "缅甸元" },
+  { code: "ARS", name: "阿根廷比索" },
+  { code: "COP", name: "哥伦比亚比索" },
+  { code: "PEN", name: "秘鲁索尔" },
+  { code: "UYU", name: "乌拉圭比索" },
+  { code: "RON", name: "罗马尼亚列伊" },
+  { code: "BGN", name: "保加利亚列弗" },
+  { code: "HRK", name: "克罗地亚库纳" },
+  { code: "ISK", name: "冰岛克朗" },
+  { code: "MAD", name: "摩洛哥迪拉姆" },
+  { code: "TND", name: "突尼斯第纳尔" },
+  { code: "JOD", name: "约旦第纳尔" },
+  { code: "KWD", name: "科威特第纳尔" },
+  { code: "BHD", name: "巴林第纳尔" },
+  { code: "OMR", name: "阿曼里亚尔" },
+];
+
+function existingCurrencyCodes() {
+  return new Set(uniqueCurrencies().map((r) => r.code));
+}
+
+function availableCatalogCurrencies() {
+  const existing = existingCurrencyCodes();
+  return CURRENCY_CATALOG.filter((c) => !existing.has(c.code));
+}
+
+function upsertCurrencyRow({ code, name, markup, source }) {
+  const upper = String(code || "").trim().toUpperCase();
+  const label = String(name || "").trim();
+  const rateSource = String(source || DEFAULT_SOURCE).trim().toUpperCase() || DEFAULT_SOURCE;
+  if (!upper || !label) {
+    return { ok: false, reason: "missing" };
+  }
+  if (rateSource !== "XE") {
+    return { ok: false, reason: "source" };
+  }
+  const stamp = nowStamp();
+  const existing = uniqueCurrencies().find((r) => r.code === upper);
+  const latestRateAt = state.rates[0]?.rateAt || stamp;
+
+  if (existing) {
+    state.rates.forEach((r) => {
+      if (r.code === upper) {
+        r.name = label;
+        r.source = rateSource;
+      }
+    });
+  } else {
+    state.rates.unshift({
+      rateAt: latestRateAt,
+      code: upper,
+      name: label,
+      rate: 1,
+      createdAt: stamp,
+      createdBy: OPERATOR,
+      updatedAt: stamp,
+      updatedBy: OPERATOR,
+      source: rateSource,
+    });
+  }
+
+  const hasMarkup = markup !== undefined && markup !== null && String(markup).trim() !== "";
+  if (hasMarkup) {
+    const next = Number(markup);
+    if (Number.isNaN(next) || next < 0) {
+      return { ok: false, reason: "markup" };
+    }
+    const prev = resolveMarkup(upper);
+    const oldRecord = state.markups[upper];
+    const first = firstHistoryMeta(upper) || oldRecord;
+    const createdBy = oldRecord?.createdBy || first?.createdBy || OPERATOR;
+    const createdAt = oldRecord?.createdAt || first?.createdAt || stamp;
+    if (Number(prev.markup) !== next || !oldRecord) {
+      pushHistory({
+        code: upper,
+        name: label,
+        source: rateSource,
+        oldMarkup: prev.markup,
+        newMarkup: next,
+        createdBy,
+        createdAt,
+        updatedBy: OPERATOR,
+        updatedAt: stamp,
+      });
+    }
+    state.markups[upper] = {
+      markup: next,
+      note: oldRecord?.note || "",
+      createdBy,
+      createdAt,
+      updatedAt: stamp,
+      updatedBy: OPERATOR,
+    };
+  }
+
+  return { ok: true, code: upper, added: !existing };
+}
+
+function openAddCurrencyModal() {
+  const select = $("#addCurrencyCode");
+  const options = availableCatalogCurrencies();
+  select.innerHTML =
+    `<option value="">请选择币种</option>` +
+    options.map((c) => `<option value="${c.code}">${c.code} · ${c.name}</option>`).join("");
+  $("#addCurrencyName").value = "";
+  $("#addCurrencyMarkup").value = "";
+  if ($("#addCurrencySource")) $("#addCurrencySource").value = "XE";
+  $("#addCurrencyModal").hidden = false;
+  if (!options.length) {
+    toast("暂无可新增币种，请使用批量导入");
+  }
+}
+
+function closeAddCurrencyModal() {
+  $("#addCurrencyModal").hidden = true;
+}
+
+function openImportCurrencyModal() {
+  $("#importCurrencyFile").value = "";
+  $("#importFileLabel").textContent = "点击选择或拖拽文件到此处";
+  $("#importHint").hidden = true;
+  $("#importHint").textContent = "";
+  if ($("#importDefaultSource")) $("#importDefaultSource").value = "XE";
+  $("#importCurrencyModal").hidden = false;
+}
+
+function closeImportCurrencyModal() {
+  $("#importCurrencyModal").hidden = true;
+}
+
+function downloadImportTemplate() {
+  const rows = [
+    ["币种", "币种名称", "汇率来源", "FX加点值"],
+    ["PLN", "波兰兹罗提", "XE", "0.5"],
+    ["DKK", "丹麦克朗", "XE", ""],
+    ["NOK", "挪威克朗", "XE", "1"],
+  ];
+  if (window.XLSX) {
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws["!cols"] = [{ wch: 12 }, { wch: 18 }, { wch: 12 }, { wch: 12 }];
+    XLSX.utils.book_append_sheet(wb, ws, "币种导入");
+    XLSX.writeFile(wb, "币种导入模板.xlsx");
+  } else {
+    exportCsv(
+      ["币种", "币种名称", "汇率来源", "FX加点值"],
+      [
+        ["PLN", "波兰兹罗提", "XE", "0.5"],
+        ["DKK", "丹麦克朗", "XE", ""],
+        ["NOK", "挪威克朗", "XE", "1"],
+      ],
+      "币种导入模板.csv"
+    );
+  }
+  toast("已下载导入模板");
+}
+
+function normalizeImportHeader(h) {
+  return String(h || "")
+    .trim()
+    .replace(/\s+/g, "")
+    .toLowerCase();
+}
+
+function parseImportRows(matrix, defaultSource = DEFAULT_SOURCE) {
+  if (!matrix || !matrix.length) return { error: "文件为空" };
+  const header = matrix[0].map(normalizeImportHeader);
+  const idxCode = header.findIndex((h) => h === "币种" || h === "code" || h === "currency");
+  const idxName = header.findIndex((h) => h === "币种名称" || h === "name" || h === "currencyname");
+  const idxSource = header.findIndex((h) => h === "汇率来源" || h === "source" || h === "ratesource");
+  const idxMarkup = header.findIndex(
+    (h) => h === "fx加点值" || h === "加点值" || h === "markup" || h === "fxmarkup"
+  );
+  if (idxCode < 0 || idxName < 0) {
+    return { error: "模板缺少必填列：币种、币种名称" };
+  }
+  const fallbackSource = String(defaultSource || DEFAULT_SOURCE).trim().toUpperCase() || DEFAULT_SOURCE;
+  const rows = [];
+  const errors = [];
+  for (let i = 1; i < matrix.length; i++) {
+    const row = matrix[i] || [];
+    if (row.every((c) => String(c ?? "").trim() === "")) continue;
+    const code = String(row[idxCode] ?? "").trim().toUpperCase();
+    const name = String(row[idxName] ?? "").trim();
+    const markupRaw = idxMarkup >= 0 ? row[idxMarkup] : "";
+    const sourceRaw =
+      idxSource >= 0 && String(row[idxSource] ?? "").trim()
+        ? String(row[idxSource]).trim().toUpperCase()
+        : fallbackSource;
+    if (!code || !name) {
+      errors.push(`第 ${i + 1} 行：币种与币种名称为必填`);
+      continue;
+    }
+    if (sourceRaw !== "XE") {
+      errors.push(`第 ${i + 1} 行：汇率来源仅支持 XE`);
+      continue;
+    }
+    rows.push({ code, name, markup: markupRaw, source: sourceRaw });
+  }
+  if (!rows.length && errors.length) return { error: errors[0] };
+  if (!rows.length) return { error: "未解析到有效数据行" };
+  return { rows, errors };
+}
+
+function readImportFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("读取文件失败"));
+    reader.onload = () => {
+      try {
+        if (window.XLSX) {
+          const data = new Uint8Array(reader.result);
+          const wb = XLSX.read(data, { type: "array" });
+          const sheet = wb.Sheets[wb.SheetNames[0]];
+          const matrix = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+          resolve(matrix);
+          return;
+        }
+        // fallback: treat as text csv
+        const text = new TextDecoder("utf-8").decode(reader.result);
+        const matrix = text
+          .replace(/^\uFEFF/, "")
+          .split(/\r?\n/)
+          .filter((l) => l.trim())
+          .map((l) => l.split(",").map((c) => c.replace(/^"|"$/g, "").trim()));
+        resolve(matrix);
+      } catch (err) {
+        reject(err);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
 function getModalScope() {
   const el = document.querySelector('input[name="modalScope"]:checked');
   return el ? el.value : "unconfigured";
@@ -1488,7 +1884,99 @@ function bind() {
     toast("已导出 FX 加点配置记录");
   });
 
-  $("#btnEditDefault").addEventListener("click", () => openModal());
+  $("#btnEditDefault")?.addEventListener("click", () => openModal());
+  $("#btnStatEditDefault")?.addEventListener("click", () => openModal());
+  $("#btnStatEditUsd")?.addEventListener("click", () => {
+    if (!currencyMeta("USD") && !state.rates.some((r) => r.code === "USD")) {
+      toast("未找到 USD 币种，请先新增");
+      return;
+    }
+    openDrawer("USD");
+  });
+  $("#btnAddCurrency").addEventListener("click", () => openAddCurrencyModal());
+  $("#btnImportCurrency").addEventListener("click", () => openImportCurrencyModal());
+
+  $("#addCurrencyClose").addEventListener("click", closeAddCurrencyModal);
+  $("#addCurrencyCancel").addEventListener("click", closeAddCurrencyModal);
+  $("#addCurrencyCode").addEventListener("change", () => {
+    const code = $("#addCurrencyCode").value;
+    const hit = CURRENCY_CATALOG.find((c) => c.code === code);
+    $("#addCurrencyName").value = hit?.name || "";
+  });
+  $("#addCurrencyForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const code = $("#addCurrencyCode").value;
+    const name = $("#addCurrencyName").value.trim();
+    const source = $("#addCurrencySource")?.value || DEFAULT_SOURCE;
+    const markup = $("#addCurrencyMarkup").value;
+    if (!code) {
+      toast("请选择币种");
+      return;
+    }
+    const result = upsertCurrencyRow({ code, name, markup, source });
+    if (!result.ok) {
+      toast(
+        result.reason === "markup"
+          ? "FX加点值不合法"
+          : result.reason === "source"
+            ? "汇率来源仅支持 XE"
+            : "请完整填写币种信息"
+      );
+      return;
+    }
+    toast(result.added ? `已新增币种 ${result.code}` : `币种 ${result.code} 已存在，已更新`);
+    closeAddCurrencyModal();
+    renderMarkup();
+  });
+
+  $("#importCurrencyClose").addEventListener("click", closeImportCurrencyModal);
+  $("#importCurrencyCancel").addEventListener("click", closeImportCurrencyModal);
+  $("#btnDownloadImportTemplate").addEventListener("click", downloadImportTemplate);
+  $("#importCurrencyFile").addEventListener("change", () => {
+    const file = $("#importCurrencyFile").files?.[0];
+    $("#importFileLabel").textContent = file ? file.name : "点击选择或拖拽文件到此处";
+    $("#importHint").hidden = true;
+  });
+  $("#importCurrencyForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const file = $("#importCurrencyFile").files?.[0];
+    if (!file) {
+      toast("请先上传文件");
+      return;
+    }
+    try {
+      const matrix = await readImportFile(file);
+      const defaultSource = $("#importDefaultSource")?.value || DEFAULT_SOURCE;
+      const parsed = parseImportRows(matrix, defaultSource);
+      if (parsed.error) {
+        const hint = $("#importHint");
+        hint.hidden = false;
+        hint.textContent = parsed.error;
+        toast(parsed.error);
+        return;
+      }
+      let added = 0;
+      let updated = 0;
+      let failed = 0;
+      parsed.rows.forEach((row) => {
+        const result = upsertCurrencyRow(row);
+        if (!result.ok) {
+          failed += 1;
+          return;
+        }
+        if (result.added) added += 1;
+        else updated += 1;
+      });
+      const extra = parsed.errors?.length ? `；跳过 ${parsed.errors.length} 行无效数据` : "";
+      toast(`导入完成：新增 ${added}，更新 ${updated}${failed ? `，失败 ${failed}` : ""}${extra}`);
+      closeImportCurrencyModal();
+      renderMarkup();
+    } catch (err) {
+      console.error(err);
+      toast("文件解析失败，请检查模板格式");
+    }
+  });
+
   $("#btnExportMarkup").addEventListener("click", () => {
     exportCsv(
       ["币种", "币种名称", "FX加点值", "FX加点值来源", "汇率来源"],
@@ -1609,6 +2097,8 @@ function bind() {
     if (e.key === "Escape") {
       closeDrawer();
       closeModal();
+      closeAddCurrencyModal();
+      closeImportCurrencyModal();
     }
   });
 }
