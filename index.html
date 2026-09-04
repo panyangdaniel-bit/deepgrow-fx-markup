@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>DeepGrow 汇率中心 · FX加点配置原型 v1854（单文件）</title>
+  <title>DeepGrow 汇率中心 · FX加点配置原型 v1859（单文件）</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -255,6 +255,8 @@ h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
 .ro span { font-size: 12px; color: var(--ink-soft); }
 .ro strong { font-size: 14px; font-weight: 600; }
 .view[hidden] { display: none !important; }
+.col-omc-only[hidden],
+#ratesTable.is-mmc .col-omc-only { display: none !important; }
 
 .scope-field {
   margin: 0;
@@ -573,14 +575,16 @@ h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
         <div class="brand-mark" aria-hidden="true"></div>
         <div>
           <div class="brand-name">DeepGrow</div>
-          <div class="brand-sub">汇率中心 · v1854 · 单文件原型</div>
+          <div class="brand-sub">汇率中心 · v1859 · 单文件原型</div>
         </div>
       </div>
       <nav class="nav">
-        <div class="nav-label">汇率管理</div>
+        <div class="nav-label">OMC汇率管理</div>
         <a class="nav-item active" href="#" data-view="markup">FX 加点配置</a>
         <a class="nav-item" href="#" data-view="history">FX 加点配置记录</a>
         <a class="nav-item" href="#" data-view="rates">汇率记录</a>
+        <div class="nav-label">MMC汇率管理</div>
+        <a class="nav-item" href="#" data-view="mmcRates">商户汇率记录</a>
       </nav>
       <div class="sidebar-foot">
         <div class="avatar">D</div>
@@ -596,9 +600,9 @@ h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
       <section id="viewRates" class="view" hidden>
         <header class="topbar">
           <div>
-            <p class="eyebrow">汇率管理 / 汇率记录</p>
-            <h1>汇率记录</h1>
-            <p class="desc">对客汇率 = 汇率值 × (1 + 加点%/100)。</p>
+            <p class="eyebrow" id="ratesEyebrow">OMC汇率管理 / 汇率记录</p>
+            <h1 id="ratesTitle">汇率记录</h1>
+            <p class="desc" id="ratesDesc">对客汇率 = 汇率值 × (1 + 加点%/100)。</p>
           </div>
           <div class="top-actions">
             <button type="button" class="btn ghost" id="btnExportRates">导出</button>
@@ -640,18 +644,21 @@ h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
           </div>
 
           <div class="table-wrap">
-            <table class="table plain">
+            <table class="table plain" id="ratesTable">
               <thead>
                 <tr>
                   <th>汇率时点</th>
                   <th>币种</th>
                   <th>币种名称</th>
-                  <th>汇率值</th>
-                  <th>FX加点值</th>
-                  <th>对客汇率</th>
+                  <th class="col-omc-only">汇率值</th>
+                  <th class="col-omc-only">FX加点值</th>
+                  <th id="ratesQuoteHeader">对客汇率</th>
                   <th>汇率来源</th>
-                  <th>FX加点值来源</th>
+                  <th class="col-omc-only">FX加点值来源</th>
                   <th>创建时间</th>
+                  <th class="col-omc-only">创建人</th>
+                  <th class="col-omc-only">更新时间</th>
+                  <th class="col-omc-only">更新人</th>
                 </tr>
               </thead>
               <tbody id="rateBody"></tbody>
@@ -677,7 +684,7 @@ h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
       <section id="viewMarkup" class="view">
         <header class="topbar">
           <div>
-            <p class="eyebrow">汇率管理 / FX 加点配置</p>
+            <p class="eyebrow">OMC汇率管理 / FX 加点配置</p>
             <h1>按币种配置 FX 加点</h1>
             <p class="desc">按币种配置 FX 加点（百分比）。未单独配置的币种走全局默认加点。</p>
           </div>
@@ -754,7 +761,7 @@ h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
       <section id="viewHistory" class="view" hidden>
         <header class="topbar">
           <div>
-            <p class="eyebrow">汇率管理 / FX 加点配置记录</p>
+            <p class="eyebrow">OMC汇率管理 / FX 加点配置记录</p>
             <h1>FX 加点配置记录</h1>
             <p class="desc">记录各币种 FX 加点变更历史，含原加点与新加点。</p>
           </div>
@@ -944,6 +951,16 @@ const RATE_SEED = [
 const TOTAL_MOCK = 10880;
 
 const OPERATOR = "Daniel";
+const RATE_OPERATORS = ["系统", "张敏", "李昂", "王珂", "Daniel"];
+
+function withRateAudit(rows) {
+  return rows.map((r, i) => {
+    const createdBy = r.createdBy || RATE_OPERATORS[i % RATE_OPERATORS.length];
+    const updatedAt = r.updatedAt || r.createdAt;
+    const updatedBy = r.updatedBy || createdBy;
+    return { ...r, createdBy, updatedAt, updatedBy };
+  });
+}
 
 const HISTORY_SEED = [
   { id: "h1", code: "USD", name: "美元", source: "XE", oldMarkup: 1, newMarkup: 0.3, createdBy: "张敏", createdAt: "2026-09-01 10:00:00", updatedBy: "张敏", updatedAt: "2026-09-03 18:20:00" },
@@ -956,7 +973,7 @@ const HISTORY_SEED = [
 
 const state = {
   view: "markup",
-  rates: structuredClone(RATE_SEED),
+  rates: withRateAudit(structuredClone(RATE_SEED)),
   /** 按币种的加点配置；无记录则走全局默认 */
   markups: {
     USD: { markup: 0.3, note: "", createdBy: "张敏", createdAt: "2026-09-01 10:00:00", updatedAt: "2026-09-03 18:20:00", updatedBy: "张敏" },
@@ -967,6 +984,7 @@ const state = {
   },
   history: structuredClone(HISTORY_SEED),
   historyFilterCode: null,
+  isMmcRates: false,
   defaultMarkup: { markup: 1 },
   ratePage: 1,
   ratePageSize: 20,
@@ -1002,15 +1020,42 @@ function nowStamp() {
 
 function switchView(view) {
   state.view = view;
-  $("#viewRates").hidden = view !== "rates";
+  const isRates = view === "rates" || view === "mmcRates";
+  $("#viewRates").hidden = !isRates;
   $("#viewMarkup").hidden = view !== "markup";
   $("#viewHistory").hidden = view !== "history";
   $$nav().forEach((el) => {
     el.classList.toggle("active", el.dataset.view === view);
   });
-  if (view === "rates") renderRates();
-  else if (view === "history") renderHistory();
+  if (isRates) {
+    syncRatesChrome(view === "mmcRates");
+    renderRates();
+  } else if (view === "history") renderHistory();
   else renderMarkup();
+}
+
+function syncRatesChrome(isMmc) {
+  state.isMmcRates = Boolean(isMmc);
+  const eyebrow = $("#ratesEyebrow");
+  const title = $("#ratesTitle");
+  const desc = $("#ratesDesc");
+  const table = $("#ratesTable");
+  const quoteHeader = $("#ratesQuoteHeader");
+  if (eyebrow) {
+    eyebrow.textContent = isMmc ? "MMC汇率管理 / 商户汇率记录" : "OMC汇率管理 / 汇率记录";
+  }
+  if (title) {
+    title.textContent = isMmc ? "商户汇率记录" : "汇率记录";
+  }
+  if (desc) {
+    desc.textContent = isMmc
+      ? "展示商户侧汇率快照，可按日期与时点查询。"
+      : "对客汇率 = 汇率值 × (1 + 加点%/100)。";
+  }
+  if (quoteHeader) {
+    quoteHeader.textContent = isMmc ? "商户汇率值" : "对客汇率";
+  }
+  if (table) table.classList.toggle("is-mmc", Boolean(isMmc));
 }
 
 function currencyMeta(code) {
@@ -1120,12 +1165,24 @@ function renderRates() {
   if (state.ratePage > pages) state.ratePage = pages;
   const start = (state.ratePage - 1) * size;
   const pageRows = all.slice(start, start + size);
+  const isMmc = Boolean(state.isMmcRates);
 
   $("#rateBody").innerHTML = pageRows
     .map((r) => {
       const m = resolveMarkup(r.code);
       const isCustom = Boolean(state.markups[r.code]);
       const quote = applyMarkup(r.rate, m.markup);
+      if (isMmc) {
+        return `
+    <tr>
+      <td class="mono">${r.rateAt}</td>
+      <td class="mono">${r.code}</td>
+      <td>${r.name}</td>
+      <td class="mono accent">${formatRate(quote)}</td>
+      <td>${r.source || DEFAULT_SOURCE}</td>
+      <td class="mono">${r.createdAt}</td>
+    </tr>`;
+      }
       return `
     <tr>
       <td class="mono">${r.rateAt}</td>
@@ -1137,6 +1194,9 @@ function renderRates() {
       <td>${r.source || DEFAULT_SOURCE}</td>
       <td>${ruleLabel(isCustom)}</td>
       <td class="mono">${r.createdAt}</td>
+      <td>${r.createdBy || "—"}</td>
+      <td class="mono">${r.updatedAt || r.createdAt}</td>
+      <td>${r.updatedBy || r.createdBy || "—"}</td>
     </tr>`;
     })
     .join("");
@@ -1353,26 +1413,36 @@ function bind() {
   });
 
   $("#btnExportRates").addEventListener("click", () => {
+    const isMmc = Boolean(state.isMmcRates);
+    const headers = isMmc
+      ? ["汇率时点", "币种", "币种名称", "商户汇率值", "汇率来源", "创建时间"]
+      : ["汇率时点", "币种", "币种名称", "汇率值", "FX加点值", "对客汇率", "汇率来源", "FX加点值来源", "创建时间", "创建人", "更新时间", "更新人"];
     exportCsv(
-      ["汇率时点", "币种", "币种名称", "汇率值", "FX加点值", "对客汇率", "汇率来源", "FX加点值来源", "创建时间"],
+      headers,
       filteredRates().map((r) => {
         const m = resolveMarkup(r.code);
-        const isCustom = Boolean(state.markups[r.code]);
+        const quote = applyMarkup(r.rate, m.markup);
+        if (isMmc) {
+          return [r.rateAt, r.code, r.name, quote, r.source, r.createdAt];
+        }
         return [
           r.rateAt,
           r.code,
           r.name,
           r.rate,
           m.markup,
-          applyMarkup(r.rate, m.markup),
+          quote,
           r.source,
-          ruleLabel(isCustom),
+          ruleLabel(Boolean(state.markups[r.code])),
           r.createdAt,
+          r.createdBy || "",
+          r.updatedAt || r.createdAt,
+          r.updatedBy || r.createdBy || "",
         ];
       }),
-      `汇率记录-${nowStamp().slice(0, 10)}.csv`
+      `${isMmc ? "商户汇率记录" : "汇率记录"}-${nowStamp().slice(0, 10)}.csv`
     );
-    toast("已导出汇率记录");
+    toast(isMmc ? "已导出商户汇率记录" : "已导出汇率记录");
   });
 
   ["markupSearch", "markupSourceFilter", "markupConfigFilter"].forEach((id) => {
