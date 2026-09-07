@@ -1,5 +1,6 @@
 # DeepGrow 汇率中心 · FX 加点配置原型
 
-静态可交互原型（v1894）。
+静态原型页面（v1902）。用浏览器打开即可体验。
 
-打开：https://panyangdaniel-bit.github.io/deepgrow-fx-markup/
+- GitHub Pages: https://panyangdaniel-bit.github.io/deepgrow-fx-markup/
+- 仓库: https://github.com/panyangdaniel-bit/deepgrow-fx-markup
