@@ -1,0 +1,2788 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>DeepGrow 汇率中心 · FX加点配置原型 v1902（单文件）</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+:root {
+  --bg: #f3efe6;
+  --bg-deep: #e8e1d4;
+  --ink: #1a2330;
+  --ink-soft: #5a6575;
+  --line: rgba(26, 35, 48, 0.1);
+  --panel: #fffdf8;
+  --sidebar: #14202e;
+  --sidebar-text: #c9d2de;
+  --accent: #0f766e;
+  --accent-deep: #0b5a54;
+  --accent-soft: rgba(15, 118, 110, 0.12);
+  --warn: #b45309;
+  --warn-soft: rgba(180, 83, 9, 0.12);
+  --danger: #b42318;
+  --ok: #067647;
+  --shadow: 0 18px 50px rgba(20, 32, 46, 0.12);
+  --radius: 14px;
+  --font: "Outfit", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: var(--font);
+  color: var(--ink);
+  background:
+    radial-gradient(900px 420px at 10% -10%, rgba(15, 118, 110, 0.12), transparent 60%),
+    radial-gradient(700px 360px at 100% 0%, rgba(180, 83, 9, 0.08), transparent 55%),
+    var(--bg);
+}
+
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.accent { color: var(--accent); font-weight: 600; }
+
+.app {
+  display: grid;
+  grid-template-columns: 248px 1fr;
+  min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+  background: linear-gradient(180deg, #182636 0%, #101924 100%);
+  color: var(--sidebar-text);
+  padding: 22px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.brand { display: flex; gap: 12px; align-items: center; padding: 4px 8px; }
+.brand-mark {
+  width: 36px; height: 36px; border-radius: 10px;
+  background:
+    linear-gradient(135deg, #14b8a6, #0f766e 55%, #b45309);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.12);
+}
+.brand-name { color: #fff; font-weight: 700; letter-spacing: 0.02em; }
+.brand-sub { font-size: 12px; opacity: 0.7; margin-top: 2px; }
+
+.nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.nav-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.45;
+  margin: 14px 10px 6px;
+}
+.nav-item {
+  text-decoration: none;
+  color: inherit;
+  padding: 10px 12px;
+  border-radius: 10px;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+.nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+.nav-item.active {
+  background: rgba(20, 184, 166, 0.18);
+  color: #fff;
+  box-shadow: inset 3px 0 0 #14b8a6;
+}
+
+.sidebar-foot {
+  display: flex; gap: 10px; align-items: center;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: #0f766e; color: #fff; font-weight: 600; font-size: 14px;
+}
+.user-name { color: #fff; font-size: 14px; }
+.user-role { font-size: 12px; opacity: 0.6; }
+
+/* Main */
+.main { padding: 28px 32px 48px; min-width: 0; }
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-start;
+  margin-bottom: 22px;
+  animation: rise 0.45s ease both;
+}
+.eyebrow {
+  margin: 0 0 6px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
+.desc { margin: 8px 0 0; color: var(--ink-soft); max-width: 560px; line-height: 1.5; }
+.top-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.btn {
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 600;
+  transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn.primary { background: var(--accent); color: #fff; box-shadow: 0 8px 20px rgba(15,118,110,0.28); }
+.btn.primary:hover { background: var(--accent-deep); }
+.btn.secondary { background: var(--ink); color: #fff; }
+.btn.ghost { background: transparent; border: 1px solid var(--line); }
+.btn.ghost:hover { background: rgba(26,35,48,0.04); }
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+  animation: rise 0.5s ease 0.05s both;
+}
+.stats.stats-5 {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+.stats.stats-6 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.stats.stats-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.stats.stats-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.stats.stats-1 {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 420px;
+}
+.stat {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  position: relative;
+  overflow: hidden;
+}
+.stat:has(.stat-action),
+.stat:has(.stat-actions) {
+  padding-right: 72px;
+}
+.stat:has(.stat-actions) {
+  padding-right: 148px;
+}
+.stat-actions {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  z-index: 1;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.stat-actions .stat-action {
+  position: static;
+  top: auto;
+  right: auto;
+  transform: none;
+}
+.stat::after {
+  content: "";
+  position: absolute;
+  inset: auto -20% -40% auto;
+  width: 120px; height: 120px;
+  background: radial-gradient(circle, var(--accent-soft), transparent 70%);
+  pointer-events: none;
+}
+.stat.warn::after { background: radial-gradient(circle, var(--warn-soft), transparent 70%); }
+.stat-label { display: block; color: var(--ink-soft); font-size: 13px; margin-bottom: 8px; }
+.stat-value { font-size: 26px; letter-spacing: -0.03em; }
+.stat-value.sm { font-size: 15px; line-height: 1.35; font-weight: 600; }
+.stat-hint { display: block; margin-top: 6px; font-size: 12px; color: var(--ink-soft); }
+.stat-action {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  z-index: 1;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-deep);
+}
+.stat-action:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.field-hint { font-size: 12px; color: var(--ink-soft); }
+.filter-input {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #fff;
+  min-width: 150px;
+}
+.filter-pair {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+.filter-pair[hidden] {
+  display: none !important;
+}
+.filter-pair select,
+.filter-pair input {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+}
+.source-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(26, 35, 48, 0.06);
+  color: var(--ink);
+}
+.table.plain th { text-transform: none; letter-spacing: 0; font-size: 13px; font-weight: 600; }
+.pager { align-items: center; }
+.pager-controls { display: flex; align-items: center; gap: 8px; }
+.page-btn {
+  width: 32px; height: 32px;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 8px;
+  font-size: 16px;
+}
+.page-btn:hover { border-color: var(--accent); color: var(--accent); }
+.page-num {
+  min-width: 28px; text-align: center; font-weight: 600;
+}
+.readonly-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #f7f3ea;
+  border: 1px solid var(--line);
+}
+.readonly-grid-4 {
+  grid-template-columns: 1fr 1fr;
+}
+.ro { display: flex; flex-direction: column; gap: 4px; }
+.ro span { font-size: 12px; color: var(--ink-soft); }
+.ro strong { font-size: 14px; font-weight: 600; }
+.view[hidden] { display: none !important; }
+.col-omc-only[hidden],
+#ratesTable.is-mmc .col-omc-only { display: none !important; }
+
+.scope-field {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+.scope-field legend {
+  padding: 0 6px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.radio {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 8px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.radio + .radio { margin-top: 4px; }
+.radio:hover { background: rgba(15, 118, 110, 0.05); }
+.radio input { margin-top: 4px; accent-color: var(--accent); }
+.radio strong { display: block; font-size: 14px; color: var(--ink); }
+.radio em {
+  display: block;
+  margin-top: 4px;
+  font-style: normal;
+  font-size: 12px;
+  color: var(--ink-soft);
+  line-height: 1.45;
+}
+.scope-hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--accent-deep);
+  font-weight: 500;
+}
+
+.linkish {
+  border: 0; background: none; color: var(--accent);
+  font-size: 13px; font-weight: 600; padding: 0; margin-top: 6px;
+}
+.linkish:hover { text-decoration: underline; }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  animation: rise 0.55s ease 0.1s both;
+}
+
+.query-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  align-items: flex-end;
+  padding: 16px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, #fffcf6, #faf6ee);
+}
+.query-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+.range-sep {
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+.panel-title {
+  padding: 14px 16px 8px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, #fffcf6, #faf6ee);
+}
+.search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 220px;
+}
+.search-icon {
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  color: var(--ink-soft); font-size: 14px;
+}
+.search-wrap input {
+  width: 100%;
+  padding: 10px 12px 10px 34px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+.toolbar select, .field select, .field input, .field textarea {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+.check {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.table-wrap { overflow: auto; }
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 980px;
+}
+.table th, .table td {
+  padding: 14px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+.table th {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-soft);
+  background: #faf7f0;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.table tbody tr {
+  transition: background 0.18s ease;
+}
+.table tbody tr:hover { background: rgba(15, 118, 110, 0.04); }
+.table tbody tr.selected { background: rgba(15, 118, 110, 0.08); }
+.col-check { width: 42px; }
+
+.currency {
+  display: flex; align-items: center; gap: 10px;
+}
+.currency-badge {
+  width: 38px; height: 38px; border-radius: 10px;
+  display: grid; place-items: center;
+  font-family: var(--mono);
+  font-size: 12px; font-weight: 600;
+  background: var(--accent-soft); color: var(--accent-deep);
+}
+.currency-name { font-weight: 600; }
+.currency-code { font-size: 12px; color: var(--ink-soft); font-family: var(--mono); }
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.pill.enabled { background: rgba(6,118,71,0.1); color: var(--ok); }
+.pill.disabled { background: rgba(26,35,48,0.08); color: var(--ink-soft); }
+.pill.draft { background: var(--warn-soft); color: var(--warn); }
+.pill.dot::before {
+  content: "";
+  width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor;
+}
+
+.markup-cell { font-family: var(--mono); font-weight: 500; }
+.muted { color: var(--ink-soft); font-size: 12px; }
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  font-size: 13px;
+  font-weight: 600;
+}
+.row-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.icon-btn, .text-btn {
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.text-btn:hover { border-color: var(--accent); color: var(--accent); }
+.icon-btn { width: 34px; height: 34px; display: grid; place-items: center; }
+
+.table-foot {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 16px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  background: #faf7f0;
+}
+
+/* Drawer */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(16, 25, 36, 0.42);
+  backdrop-filter: blur(2px);
+  z-index: 40;
+  animation: fade 0.2s ease;
+}
+.drawer {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: min(420px, 100%);
+  background: var(--panel);
+  z-index: 50;
+  box-shadow: -20px 0 60px rgba(0,0,0,0.18);
+  transform: translateX(104%);
+  transition: transform 0.28s cubic-bezier(.2,.8,.2,1);
+  display: flex;
+  flex-direction: column;
+}
+.drawer.open { transform: translateX(0); }
+.drawer-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 22px 22px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.drawer h2 { margin: 0; font-size: 22px; }
+.drawer-body {
+  padding: 18px 22px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow: auto;
+}
+.field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--ink-soft); }
+.field input, .field select, .field textarea { color: var(--ink); }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.preview-box {
+  border: 1px dashed rgba(15,118,110,0.35);
+  background: linear-gradient(180deg, rgba(15,118,110,0.08), rgba(15,118,110,0.02));
+  border-radius: 12px;
+  padding: 14px;
+}
+.preview-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); margin-bottom: 8px; }
+.preview-line { display: flex; justify-content: space-between; margin: 4px 0; }
+.preview-hint { margin-top: 8px; font-size: 12px; color: var(--ink-soft); }
+.drawer-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
+
+.modal {
+  position: fixed; inset: 0; z-index: 60;
+  display: grid; place-items: center;
+  background: rgba(16, 25, 36, 0.42);
+  backdrop-filter: blur(2px);
+  animation: fade 0.2s ease;
+}
+.modal[hidden] { display: none !important; }
+.modal-card {
+  width: min(460px, calc(100% - 32px));
+  background: var(--panel);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  animation: pop 0.28s cubic-bezier(.2,.8,.2,1);
+}
+.modal-card-wide { width: min(560px, calc(100% - 32px)); }
+.modal-card-xl {
+  width: min(960px, calc(100% - 32px));
+  max-height: min(88vh, 820px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.modal-card-xl .drawer-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.modal-card-xl .modal-desc,
+.modal-card-xl .drawer-actions {
+  flex-shrink: 0;
+}
+.modal-card-xl .history-table,
+.modal-card-xl .rate-time-history-table {
+  flex: 1 1 auto;
+  min-height: 420px;
+  max-height: none;
+  overflow: auto;
+}
+.modal-card-xl .table {
+  width: 100%;
+  table-layout: fixed;
+}
+.modal-card-xl .table th,
+.modal-card-xl .table td {
+  white-space: nowrap;
+  padding: 12px 16px;
+}
+.modal-desc { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.5; }
+.import-steps { display: flex; flex-direction: column; gap: 14px; }
+.import-step {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+.import-step em {
+  font-style: normal;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+.file-drop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 88px;
+  padding: 14px;
+  border: 1px dashed rgba(15, 118, 110, 0.35);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(15,118,110,0.06), rgba(15,118,110,0.02));
+  cursor: pointer;
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 13px;
+  position: relative;
+}
+.file-drop input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.file-drop:hover { border-color: var(--accent); color: var(--accent-deep); }
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%) translateY(12px);
+  background: var(--ink);
+  color: #fff;
+  padding: 12px 18px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 14px;
+  z-index: 80;
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes pop {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 1100px) {
+  .stats.stats-5 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .stats.stats-6 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 960px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar { position: relative; height: auto; }
+  .stats { grid-template-columns: 1fr 1fr; }
+  .stats.stats-3 { grid-template-columns: 1fr; }
+  .stats.stats-5 { grid-template-columns: 1fr; }
+  .stats.stats-6 { grid-template-columns: 1fr; }
+  .topbar { flex-direction: column; }
+}
+
+@media (max-width: 640px) {
+  .main { padding: 18px 14px 40px; }
+  .stats { grid-template-columns: 1fr; }
+  .field-row { grid-template-columns: 1fr; }
+  .readonly-grid { grid-template-columns: 1fr; }
+}
+
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"></div>
+        <div>
+          <div class="brand-name">DeepGrow</div>
+          <div class="brand-sub">汇率中心 · v1902 · 单文件原型</div>
+        </div>
+      </div>
+      <nav class="nav">
+        <div class="nav-label">OMC Payment Service</div>
+        <a class="nav-item" href="#" data-view="paymentRates">汇率记录</a>
+        <div class="nav-label">OMC聚合支付汇率管理</div>
+        <a class="nav-item active" href="#" data-view="markup">FX 加点配置</a>
+        <a class="nav-item" href="#" data-view="history">FX 加点配置记录</a>
+        <a class="nav-item" href="#" data-view="rates">汇率记录</a>
+        <div class="nav-label">MMC汇率管理</div>
+        <a class="nav-item" href="#" data-view="mmcRates">商户汇率记录</a>
+      </nav>
+      <div class="sidebar-foot">
+        <div class="avatar">D</div>
+        <div>
+          <div class="user-name">产品 · Daniel</div>
+          <div class="user-role">可编辑加点</div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <!-- 汇率记录 -->
+      <section id="viewRates" class="view" hidden>
+        <header class="topbar">
+          <div>
+            <p class="eyebrow" id="ratesEyebrow">OMC聚合支付汇率管理 / 汇率记录</p>
+            <h1 id="ratesTitle">汇率记录</h1>
+            <p class="desc" id="ratesDesc">对客汇率 = 汇率值 × (1 + 加点%/100)。D+1日2:00（UTC+8）同步D日的汇率。</p>
+          </div>
+          <div class="top-actions">
+            <button type="button" class="btn ghost" id="btnExportRates">导出</button>
+            <button type="button" class="btn primary" id="btnGoMarkup">去配置 FX 加点</button>
+          </div>
+        </header>
+
+        <section class="stats stats-1" aria-label="概览">
+          <article class="stat">
+            <span class="stat-label">最新汇率时点</span>
+            <strong class="stat-value mono sm" id="statRateAt">—</strong>
+          </article>
+        </section>
+
+        <section class="panel">
+          <div class="toolbar">
+            <div class="search-wrap">
+              <span class="search-icon" aria-hidden="true">⌕</span>
+              <input id="rateSearch" type="search" placeholder="搜索币种 / 币种名称，如 JPY、日元" />
+            </div>
+            <select id="rateSourceFilter" aria-label="汇率来源">
+              <option value="all">全部来源</option>
+              <option value="XE" selected>XE</option>
+            </select>
+            <label class="filter-pair">
+              <span>汇率日期</span>
+              <input id="rateDateFilter" type="date" class="mono filter-input" aria-label="汇率日期" />
+            </label>
+            <label class="filter-pair" id="rateTimeFilterWrap">
+              <span>汇率时点</span>
+              <select id="rateTimeFilter" aria-label="汇率时点">
+                <option value="all">全部时点</option>
+                <option value="01:00:00">1:00</option>
+                <option value="10:00:00">10:00</option>
+                <option value="13:00:00">13:00</option>
+                <option value="21:00:00">21:00</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="table-wrap">
+            <table class="table plain" id="ratesTable">
+              <thead>
+                <tr>
+                  <th>汇率日期</th>
+                  <th class="col-omc-only">汇率时点</th>
+                  <th>币种</th>
+                  <th>币种名称</th>
+                  <th class="col-omc-only">汇率值</th>
+                  <th class="col-omc-only">FX加点值</th>
+                  <th id="ratesQuoteHeader">对客汇率</th>
+                  <th class="col-omc-only">汇率来源</th>
+                  <th class="col-omc-only">FX加点值来源</th>
+                  <th>创建时间</th>
+                  <th class="col-omc-only">创建人</th>
+                  <th class="col-omc-only">更新时间</th>
+                  <th class="col-omc-only">更新人</th>
+                </tr>
+              </thead>
+              <tbody id="rateBody"></tbody>
+            </table>
+          </div>
+
+          <div class="table-foot pager">
+            <span id="rateRange">第 1-20 条 / 总共 — 条</span>
+            <div class="pager-controls">
+              <button type="button" class="page-btn" id="ratePrev" aria-label="上一页">‹</button>
+              <span class="page-num" id="ratePageLabel">1</span>
+              <button type="button" class="page-btn" id="rateNext" aria-label="下一页">›</button>
+              <select id="ratePageSize" aria-label="每页条数">
+                <option value="20" selected>20 条/页</option>
+                <option value="50">50 条/页</option>
+              </select>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-- OMC Payment Service / 汇率记录 -->
+      <section id="viewPaymentRates" class="view" hidden>
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">OMC Payment Service / 汇率记录</p>
+            <h1>汇率记录</h1>
+          </div>
+        </header>
+
+        <section class="panel">
+          <form class="query-bar" id="paymentRateQueryForm">
+            <label class="filter-pair">
+              <span>汇率日期</span>
+              <input id="payRateDate" type="date" class="mono filter-input" aria-label="汇率日期" />
+            </label>
+            <label class="filter-pair">
+              <span>汇率时点</span>
+              <select id="payRateTime" aria-label="汇率时点">
+                <option value="all">全部时点</option>
+                <option value="01:00:00">1:00</option>
+                <option value="10:00:00">10:00</option>
+                <option value="13:00:00">13:00</option>
+                <option value="21:00:00">21:00</option>
+              </select>
+            </label>
+            <label class="filter-pair">
+              <span>币种</span>
+              <input id="payRateCode" type="text" class="filter-input" placeholder="请输入币种代码" />
+            </label>
+            <label class="filter-pair">
+              <span>币种名称</span>
+              <input id="payRateName" type="text" class="filter-input" placeholder="请输入币种名称" />
+            </label>
+            <label class="filter-pair">
+              <span>创建时间</span>
+              <input id="payRateCreatedFrom" type="date" class="mono filter-input" aria-label="创建时间起" />
+              <span class="range-sep">—</span>
+              <input id="payRateCreatedTo" type="date" class="mono filter-input" aria-label="创建时间止" />
+            </label>
+            <div class="query-actions">
+              <button type="button" class="btn ghost" id="btnPayRateReset">重置</button>
+              <button type="submit" class="btn primary" id="btnPayRateSearch">查询</button>
+            </div>
+          </form>
+
+          <div class="panel-title">汇率记录</div>
+
+          <div class="table-wrap">
+            <table class="table plain">
+              <thead>
+                <tr>
+                  <th>汇率日期</th>
+                  <th>汇率时点</th>
+                  <th>币种</th>
+                  <th>币种名称</th>
+                  <th>汇率值</th>
+                  <th>创建时间</th>
+                  <th>汇率来源</th>
+                </tr>
+              </thead>
+              <tbody id="payRateBody"></tbody>
+            </table>
+          </div>
+
+          <div class="table-foot pager">
+            <span id="payRateRange">第 1-20 条 / 共 — 条</span>
+            <div class="pager-controls">
+              <button type="button" class="page-btn" id="payRatePrev" aria-label="上一页">‹</button>
+              <span class="page-num" id="payRatePageLabel">1</span>
+              <button type="button" class="page-btn" id="payRateNext" aria-label="下一页">›</button>
+              <select id="payRatePageSize" aria-label="每页条数">
+                <option value="20" selected>20 条/页</option>
+                <option value="50">50 条/页</option>
+              </select>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-- FX 加点配置 -->
+      <section id="viewMarkup" class="view">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">OMC聚合支付汇率管理 / FX 加点配置</p>
+            <h1>按币种配置 FX 加点</h1>
+            <p class="desc">按币种配置 FX 加点（百分比）。未单独配置的币种走全局默认加点。以下配置在下一个21:30生效。</p>
+          </div>
+          <div class="top-actions">
+            <button type="button" class="btn ghost" id="btnAddCurrency">新增币种</button>
+            <button type="button" class="btn ghost" id="btnImportCurrency">批量导入币种</button>
+            <button type="button" class="btn ghost" id="btnExportMarkup">导出</button>
+          </div>
+        </header>
+
+        <section class="stats stats-6" aria-label="加点概览" aria-live="polite">
+          <article class="stat">
+            <span class="stat-label">全局默认加点（支持修改，不包含USD）</span>
+            <strong class="stat-value mono" id="statDefault">—</strong>
+            <div class="stat-actions">
+              <button type="button" class="stat-action" id="btnStatEditDefault">修改</button>
+              <button type="button" class="stat-action" id="btnStatDefaultHistory">更新记录</button>
+            </div>
+          </article>
+          <article class="stat">
+            <span class="stat-label">当前USD加点值（默认不加点，请按需修改）</span>
+            <strong class="stat-value mono" id="usdMarkupValue">—</strong>
+            <div class="stat-actions">
+              <button type="button" class="stat-action" id="btnStatEditUsd">修改</button>
+              <button type="button" class="stat-action" id="btnStatUsdHistory">更新记录</button>
+            </div>
+          </article>
+          <article class="stat">
+            <span class="stat-label">商户关联汇率时点（默认10:00，支持修改）</span>
+            <strong class="stat-value mono sm" id="statRateTime">—</strong>
+            <div class="stat-actions">
+              <button type="button" class="stat-action" id="btnStatEditRateTime">修改</button>
+              <button type="button" class="stat-action" id="btnStatRateTimeHistory">更新记录</button>
+            </div>
+          </article>
+          <article class="stat">
+            <span class="stat-label">可配置币种</span>
+            <strong class="stat-value" id="statConfigured">—</strong>
+          </article>
+          <article class="stat warn">
+            <span class="stat-label">走默认加点</span>
+            <strong class="stat-value" id="statFallback">—</strong>
+          </article>
+          <article class="stat">
+            <span class="stat-label">已单独配置</span>
+            <strong class="stat-value" id="statCustom">—</strong>
+          </article>
+        </section>
+
+        <section class="panel">
+          <div class="toolbar">
+            <div class="search-wrap">
+              <span class="search-icon" aria-hidden="true">⌕</span>
+              <input id="markupSearch" type="search" placeholder="搜索币种 / 币种名称" />
+            </div>
+            <select id="markupSourceFilter" aria-label="汇率来源">
+              <option value="all">汇率来源</option>
+              <option value="XE">XE</option>
+            </select>
+            <select id="markupConfigFilter" aria-label="FX加点值来源">
+              <option value="all">FX加点值来源</option>
+              <option value="custom">单独配置</option>
+              <option value="default">默认值</option>
+            </select>
+          </div>
+
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>币种</th>
+                  <th>币种名称</th>
+                  <th>FX加点值</th>
+                  <th>关联汇率时点</th>
+                  <th>FX加点值来源</th>
+                  <th>汇率来源</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="markupBody"></tbody>
+            </table>
+          </div>
+
+          <div class="table-foot">
+            <span id="markupCount"></span>
+          </div>
+        </section>
+      </section>
+
+      <!-- FX 加点配置记录 -->
+      <section id="viewHistory" class="view" hidden>
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">OMC聚合支付汇率管理 / FX 加点配置记录</p>
+            <h1>FX 加点配置记录</h1>
+            <p class="desc">记录各币种 FX 加点变更历史，含原加点与新加点。</p>
+          </div>
+          <div class="top-actions">
+            <button type="button" class="btn ghost" id="btnClearHistoryFilter" hidden>清除币种筛选</button>
+            <button type="button" class="btn ghost" id="btnExportHistory">导出</button>
+            <button type="button" class="btn primary" id="btnBackMarkup">返回加点配置</button>
+          </div>
+        </header>
+
+        <section class="panel">
+          <div class="toolbar">
+            <div class="search-wrap">
+              <span class="search-icon" aria-hidden="true">⌕</span>
+              <input id="historySearch" type="search" placeholder="搜索币种 / 币种名称 / 操作人" />
+            </div>
+            <span class="filter-chip" id="historyFilterChip" hidden></span>
+          </div>
+
+          <div class="table-wrap">
+            <table class="table plain">
+              <thead>
+                <tr>
+                  <th>币种</th>
+                  <th>币种名称</th>
+                  <th>汇率来源</th>
+                  <th>原 FX 加点</th>
+                  <th>新 FX 加点</th>
+                  <th>创建人</th>
+                  <th>创建时间</th>
+                  <th>更新人</th>
+                  <th>更新时间</th>
+                </tr>
+              </thead>
+              <tbody id="historyBody"></tbody>
+            </table>
+          </div>
+
+          <div class="table-foot">
+            <span id="historyCount"></span>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div class="overlay" id="drawerOverlay" hidden></div>
+  <aside class="drawer" id="drawer" aria-hidden="true">
+    <div class="drawer-head">
+      <div>
+        <p class="eyebrow" id="drawerEyebrow">配置 FX 加点</p>
+        <h2 id="drawerTitle">—</h2>
+      </div>
+      <button type="button" class="icon-btn" id="drawerClose" aria-label="关闭">✕</button>
+    </div>
+    <form class="drawer-body" id="editForm">
+      <input type="hidden" id="editCode" />
+
+      <div class="readonly-grid readonly-grid-4">
+        <div class="ro"><span>币种</span><strong class="mono" id="roCode">—</strong></div>
+        <div class="ro"><span>币种名称</span><strong id="roName">—</strong></div>
+        <div class="ro"><span>关联汇率时点</span><strong class="mono" id="roRateAt">—</strong></div>
+        <div class="ro"><span>汇率来源</span><strong id="roSource">XE</strong></div>
+      </div>
+
+      <label class="field">
+        <span>加点值（%）</span>
+        <input id="editMarkup" class="mono" type="number" step="any" min="0" required placeholder="如 1" />
+      </label>
+
+      <label class="field">
+        <span>备注</span>
+        <textarea id="editNote" rows="3" placeholder="可选：变更原因"></textarea>
+      </label>
+
+      <div class="drawer-actions">
+        <button type="button" class="btn ghost" id="btnCancel">取消</button>
+        <button type="submit" class="btn primary">确认并提交</button>
+      </div>
+    </form>
+  </aside>
+
+  <div class="modal" id="modal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <div class="drawer-head">
+        <div>
+          <p class="eyebrow">全局默认</p>
+          <h2>修改全局默认加点</h2>
+        </div>
+        <button type="button" class="icon-btn" id="modalClose" aria-label="关闭">✕</button>
+      </div>
+      <form id="modalForm" class="drawer-body">
+        <p class="modal-desc">设置全局默认加点（百分比），并选择本次生效范围。</p>
+        <label class="field">
+          <span>加点值（%）</span>
+          <input id="modalMarkup" class="mono" type="number" step="any" min="0" required placeholder="如 1" />
+        </label>
+        <fieldset class="scope-field">
+          <legend>生效范围</legend>
+          <label class="radio">
+            <input type="radio" name="modalScope" value="unconfigured" checked />
+            <span>
+              <strong>仅未独立配置的生效</strong>
+              <em>列表中未独立修改过的币种采用新默认值；已独立配置的保持原数值</em>
+            </span>
+          </label>
+          <label class="radio">
+            <input type="radio" name="modalScope" value="all" />
+            <span>
+              <strong>全量生效</strong>
+              <em>全部币种统一采用新默认值，已有独立配置将被清除</em>
+            </span>
+          </label>
+        </fieldset>
+        <p class="scope-hint" id="scopeHint"></p>
+        <div class="drawer-actions">
+          <button type="button" class="btn ghost" id="modalCancel">取消</button>
+          <button type="submit" class="btn primary">确认并提交</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="rateTimeModal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <div class="drawer-head">
+        <div>
+          <p class="eyebrow">商户关联</p>
+          <h2>修改商户关联汇率时点</h2>
+        </div>
+        <button type="button" class="icon-btn" id="rateTimeModalClose" aria-label="关闭">✕</button>
+      </div>
+      <form id="rateTimeModalForm" class="drawer-body">
+        <p class="modal-desc">设置商户关联汇率时点。未单独配置关联时点的币种将采用该默认时点。</p>
+        <label class="field">
+          <span>关联汇率时点</span>
+          <select id="modalRateTime" required>
+            <option value="01:00:00">1:00</option>
+            <option value="10:00:00" selected>10:00</option>
+            <option value="13:00:00">13:00</option>
+            <option value="21:00:00">21:00</option>
+          </select>
+        </label>
+        <div class="drawer-actions">
+          <button type="button" class="btn ghost" id="rateTimeModalCancel">取消</button>
+          <button type="submit" class="btn primary">确认并提交</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="rateTimeHistoryModal" hidden>
+      <div class="modal-card modal-card-xl" role="dialog" aria-modal="true">
+      <div class="drawer-head">
+        <div>
+          <p class="eyebrow">商户关联</p>
+          <h2>商户关联汇率时点 · 更新记录</h2>
+        </div>
+        <button type="button" class="icon-btn" id="rateTimeHistoryClose" aria-label="关闭">✕</button>
+      </div>
+      <div class="drawer-body">
+        <p class="modal-desc">记录商户关联汇率时点的变更历史。</p>
+        <div class="table-wrap history-table">
+          <table class="table plain">
+            <thead>
+              <tr>
+                <th>旧值</th>
+                <th>新值</th>
+                <th>更新时间</th>
+                <th>更新人</th>
+              </tr>
+            </thead>
+            <tbody id="rateTimeHistoryBody"></tbody>
+          </table>
+        </div>
+        <div class="drawer-actions">
+          <button type="button" class="btn primary" id="rateTimeHistoryOk">关闭</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="defaultMarkupHistoryModal" hidden>
+    <div class="modal-card modal-card-xl" role="dialog" aria-modal="true">
+      <div class="drawer-head">
+        <div>
+          <p class="eyebrow">全局默认</p>
+          <h2>全局默认加点 · 更新记录</h2>
+        </div>
+        <button type="button" class="icon-btn" id="defaultMarkupHistoryClose" aria-label="关闭">✕</button>
+      </div>
+      <div class="drawer-body">
+        <p class="modal-desc">记录全局默认加点的变更历史。</p>
+        <div class="table-wrap history-table">
+          <table class="table plain">
+            <thead>
+              <tr>
+                <th>旧值</th>
+                <th>新值</th>
+                <th>更新时间</th>
+                <th>更新人</th>
+              </tr>
+            </thead>
+            <tbody id="defaultMarkupHistoryBody"></tbody>
+          </table>
+        </div>
+        <div class="drawer-actions">
+          <button type="button" class="btn primary" id="defaultMarkupHistoryOk">关闭</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="usdMarkupHistoryModal" hidden>
+    <div class="modal-card modal-card-xl" role="dialog" aria-modal="true">
+      <div class="drawer-head">
+        <div>
+          <p class="eyebrow">USD 加点</p>
+          <h2>当前USD加点值 · 更新记录</h2>
+        </div>
+        <button type="button" class="icon-btn" id="usdMarkupHistoryClose" aria-label="关闭">✕</button>
+      </div>
+      <div class="drawer-body">
+        <p class="modal-desc">记录 USD 加点值的变更历史。</p>
+        <div class="table-wrap history-table">
+          <table class="table plain">
+            <thead>
+              <tr>
+                <th>旧值</th>
+                <th>新值</th>
+                <th>更新时间</th>
+                <th>更新人</th>
+              </tr>
+            </thead>
+            <tbody id="usdMarkupHistoryBody"></tbody>
+          </table>
+        </div>
+        <div class="drawer-actions">
+          <button type="button" class="btn primary" id="usdMarkupHistoryOk">关闭</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="addCurrencyModal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <div class="drawer-head">
+        <div>
+          <p class="eyebrow">FX 加点配置</p>
+          <h2>新增币种</h2>
+        </div>
+        <button type="button" class="icon-btn" id="addCurrencyClose" aria-label="关闭">✕</button>
+      </div>
+      <form id="addCurrencyForm" class="drawer-body">
+        <p class="modal-desc">从可选币种中选择后，系统自动带出币种名称；提交后加入可配置列表。</p>
+        <label class="field">
+          <span>币种</span>
+          <select id="addCurrencyCode" required>
+            <option value="">请选择币种</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>币种名称</span>
+          <input id="addCurrencyName" type="text" readonly placeholder="选择币种后自动带出" />
+        </label>
+        <label class="field">
+          <span>汇率来源</span>
+          <select id="addCurrencySource" required>
+            <option value="XE" selected>XE</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>FX加点值（%）（可选）</span>
+          <input id="addCurrencyMarkup" class="mono" type="number" step="any" min="0" placeholder="不填则走全局默认" />
+        </label>
+        <div class="drawer-actions">
+          <button type="button" class="btn ghost" id="addCurrencyCancel">取消</button>
+          <button type="submit" class="btn primary">确认并提交</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="importCurrencyModal" hidden>
+    <div class="modal-card modal-card-wide" role="dialog" aria-modal="true">
+      <div class="drawer-head">
+        <div>
+          <p class="eyebrow">FX 加点配置</p>
+          <h2>批量导入币种</h2>
+        </div>
+        <button type="button" class="icon-btn" id="importCurrencyClose" aria-label="关闭">✕</button>
+      </div>
+      <form id="importCurrencyForm" class="drawer-body">
+        <p class="modal-desc">请先下载模板，按模板填写后上传 Excel（.xlsx / .xls）或 CSV。模板字段为币种、币种名称、FX加点值；币种、币种名称为必填，FX加点值选填（未填则走全局默认）。</p>
+        <div class="import-steps">
+          <div class="import-step">
+            <strong>1. 下载模板</strong>
+            <button type="button" class="btn secondary" id="btnDownloadImportTemplate">下载导入模板</button>
+            <em>模板字段：币种、币种名称、FX加点值</em>
+          </div>
+          <label class="field">
+            <span>默认汇率来源（文件未填时使用）</span>
+            <select id="importDefaultSource" required>
+              <option value="XE" selected>XE</option>
+            </select>
+          </label>
+          <div class="import-step">
+            <strong>2. 上传文件</strong>
+            <label class="file-drop">
+              <input id="importCurrencyFile" type="file" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv" required />
+              <span id="importFileLabel">点击选择或拖拽文件到此处</span>
+            </label>
+          </div>
+        </div>
+        <p class="scope-hint" id="importHint" hidden></p>
+        <div class="drawer-actions">
+          <button type="button" class="btn ghost" id="importCurrencyCancel">取消</button>
+          <button type="submit" class="btn primary">确认并提交</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script>
+const DEFAULT_SOURCE = "XE";
+
+/** 汇率记录字段：汇率时点 / 币种 / 币种名称 / 汇率值 / 创建时间 / 汇率来源 */
+const RATE_SEED = [
+  { rateAt: "2026-09-03 21:00:00", code: "CLP", name: "智利比索", rate: 932.0153, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "BND", name: "文莱元", rate: 1.2872, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "QAR", name: "卡塔尔里亚尔", rate: 3.64, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "PHP", name: "菲律宾比索", rate: 57.142, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "XAU", name: "黄金", rate: 0.000281, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "XBT", name: "比特币", rate: 0.00000894, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "TWD", name: "新台币", rate: 30.682, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "MOP", name: "澳门元", rate: 8.0375, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "HKD", name: "港币", rate: 7.7997, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "CAD", name: "加拿大元", rate: 1.3794, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "AUD", name: "澳大利亚元", rate: 1.5288, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "CHF", name: "瑞士法郎", rate: 0.7977, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "SGD", name: "新加坡元", rate: 1.2871, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "NZD", name: "新西兰元", rate: 1.7039, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "JPY", name: "日元", rate: 148.3455, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "GBP", name: "英镑", rate: 0.7422, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "EUR", name: "欧元", rate: 0.8591, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "USD", name: "美元", rate: 1, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "CNY", name: "人民币", rate: 7.1214, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "KRW", name: "韩元", rate: 1392.5, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "THB", name: "泰铢", rate: 32.185, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "IDR", name: "印尼盾", rate: 16320, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "BRL", name: "巴西雷亚尔", rate: 5.428, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "MXN", name: "墨西哥比索", rate: 19.852, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "INR", name: "印度卢比", rate: 88.142, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "AED", name: "阿联酋迪拉姆", rate: 3.6725, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "TRY", name: "土耳其里拉", rate: 41.25, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "VND", name: "越南盾", rate: 24850, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "MYR", name: "马来西亚林吉特", rate: 4.215, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "SAR", name: "沙特里亚尔", rate: 3.75, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  // 另一汇率时点，便于按时点查询演示
+  { rateAt: "2026-09-02 21:00:00", code: "USD", name: "美元", rate: 1, createdAt: "2026-09-03 02:05:08", source: "XE" },
+  { rateAt: "2026-09-02 21:00:00", code: "EUR", name: "欧元", rate: 0.8612, createdAt: "2026-09-03 02:05:08", source: "XE" },
+  { rateAt: "2026-09-02 21:00:00", code: "GBP", name: "英镑", rate: 0.7448, createdAt: "2026-09-03 02:05:08", source: "XE" },
+  { rateAt: "2026-09-02 21:00:00", code: "JPY", name: "日元", rate: 147.982, createdAt: "2026-09-03 02:05:08", source: "XE" },
+  { rateAt: "2026-09-02 21:00:00", code: "HKD", name: "港币", rate: 7.8012, createdAt: "2026-09-03 02:05:08", source: "XE" },
+  { rateAt: "2026-09-02 21:00:00", code: "SGD", name: "新加坡元", rate: 1.2895, createdAt: "2026-09-03 02:05:08", source: "XE" },
+  { rateAt: "2026-09-02 21:00:00", code: "CNY", name: "人民币", rate: 7.1188, createdAt: "2026-09-03 02:05:08", source: "XE" },
+  { rateAt: "2026-09-02 21:00:00", code: "AUD", name: "澳大利亚元", rate: 1.531, createdAt: "2026-09-03 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 01:00:00", code: "USD", name: "美元", rate: 1, createdAt: "2026-09-03 05:12:03", source: "XE" },
+  { rateAt: "2026-09-03 01:00:00", code: "EUR", name: "欧元", rate: 0.8602, createdAt: "2026-09-03 05:12:03", source: "XE" },
+  { rateAt: "2026-09-03 01:00:00", code: "JPY", name: "日元", rate: 148.12, createdAt: "2026-09-03 05:12:03", source: "XE" },
+  { rateAt: "2026-09-03 10:00:00", code: "USD", name: "美元", rate: 1, createdAt: "2026-09-03 14:05:22", source: "XE" },
+  { rateAt: "2026-09-03 10:00:00", code: "EUR", name: "欧元", rate: 0.8598, createdAt: "2026-09-03 14:05:22", source: "XE" },
+  { rateAt: "2026-09-03 10:00:00", code: "CNY", name: "人民币", rate: 7.1201, createdAt: "2026-09-03 14:05:22", source: "XE" },
+  { rateAt: "2026-09-03 13:00:00", code: "USD", name: "美元", rate: 1, createdAt: "2026-09-03 17:08:41", source: "XE" },
+  { rateAt: "2026-09-03 13:00:00", code: "GBP", name: "英镑", rate: 0.7431, createdAt: "2026-09-03 17:08:41", source: "XE" },
+  { rateAt: "2026-09-03 13:00:00", code: "HKD", name: "港币", rate: 7.8001, createdAt: "2026-09-03 17:08:41", source: "XE" },
+];
+
+const TOTAL_MOCK = 10880;
+
+const OPERATOR = "Daniel";
+const RATE_OPERATORS = ["系统", "张敏", "李昂", "王珂", "Daniel"];
+
+function withRateAudit(rows) {
+  return rows.map((r, i) => {
+    const createdBy = r.createdBy || RATE_OPERATORS[i % RATE_OPERATORS.length];
+    const updatedAt = r.updatedAt || r.createdAt;
+    const updatedBy = r.updatedBy || createdBy;
+    return { ...r, createdBy, updatedAt, updatedBy };
+  });
+}
+
+const HISTORY_SEED = [
+  { id: "h1", code: "USD", name: "美元", source: "XE", oldMarkup: 1, newMarkup: 0.3, createdBy: "张敏", createdAt: "2026-09-01 10:00:00", updatedBy: "张敏", updatedAt: "2026-09-03 18:20:00" },
+  { id: "h2", code: "EUR", name: "欧元", source: "XE", oldMarkup: 1, newMarkup: 0.5, createdBy: "张敏", createdAt: "2026-08-28 09:00:00", updatedBy: "张敏", updatedAt: "2026-08-28 09:00:00" },
+  { id: "h3", code: "EUR", name: "欧元", source: "XE", oldMarkup: 0.5, newMarkup: 0.45, createdBy: "张敏", createdAt: "2026-08-28 09:00:00", updatedBy: "张敏", updatedAt: "2026-09-02 11:05:00" },
+  { id: "h4", code: "JPY", name: "日元", source: "XE", oldMarkup: 1, newMarkup: 0.35, createdBy: "张敏", createdAt: "2026-08-28 09:12:00", updatedBy: "张敏", updatedAt: "2026-08-28 09:12:00" },
+  { id: "h5", code: "GBP", name: "英镑", source: "XE", oldMarkup: 1, newMarkup: 0.5, createdBy: "李昂", createdAt: "2026-09-01 16:40:00", updatedBy: "李昂", updatedAt: "2026-09-01 16:40:00" },
+  { id: "h6", code: "HKD", name: "港币", source: "XE", oldMarkup: 1, newMarkup: 0.25, createdBy: "王珂", createdAt: "2026-08-27 14:33:00", updatedBy: "王珂", updatedAt: "2026-08-27 14:33:00" },
+];
+
+const state = {
+  view: "markup",
+  rates: withRateAudit(structuredClone(RATE_SEED)),
+  /** 按币种的加点配置；无记录则走全局默认 */
+  markups: {
+    USD: { markup: 0.3, note: "", createdBy: "张敏", createdAt: "2026-09-01 10:00:00", updatedAt: "2026-09-03 18:20:00", updatedBy: "张敏" },
+    EUR: { markup: 0.45, note: "", createdBy: "张敏", createdAt: "2026-08-28 09:00:00", updatedAt: "2026-09-02 11:05:00", updatedBy: "张敏" },
+    JPY: { markup: 0.35, note: "", createdBy: "张敏", createdAt: "2026-08-28 09:12:00", updatedAt: "2026-08-28 09:12:00", updatedBy: "张敏" },
+    GBP: { markup: 0.5, note: "", createdBy: "李昂", createdAt: "2026-09-01 16:40:00", updatedAt: "2026-09-01 16:40:00", updatedBy: "李昂" },
+    HKD: { markup: 0.25, note: "", createdBy: "王珂", createdAt: "2026-08-27 14:33:00", updatedAt: "2026-08-27 14:33:00", updatedBy: "王珂" },
+  },
+  history: structuredClone(HISTORY_SEED),
+  historyFilterCode: null,
+  isMmcRates: false,
+  defaultMarkup: { markup: 1 },
+  /** 全局默认加点变更记录 */
+  defaultMarkupHistory: [
+    {
+      id: "dm1",
+      oldMarkup: 0.8,
+      newMarkup: 1,
+      updatedAt: "2026-09-02 15:30:00",
+      updatedBy: "Daniel",
+    },
+    {
+      id: "dm2",
+      oldMarkup: 1,
+      newMarkup: 0.8,
+      updatedAt: "2026-08-28 09:00:00",
+      updatedBy: "张敏",
+    },
+  ],
+  /** USD 加点变更记录 */
+  usdMarkupHistory: [
+    {
+      id: "um1",
+      oldMarkup: 0,
+      newMarkup: 0.3,
+      updatedAt: "2026-09-03 18:20:00",
+      updatedBy: "张敏",
+    },
+    {
+      id: "um2",
+      oldMarkup: 1,
+      newMarkup: 0,
+      updatedAt: "2026-09-01 10:00:00",
+      updatedBy: "张敏",
+    },
+  ],
+  /** 商户关联汇率时点全局默认；无单独配置则走此值 */
+  defaultRateTime: "10:00:00",
+  /** 按币种单独配置的关联汇率时点 */
+  rateTimes: {},
+  /** 商户关联汇率时点变更记录 */
+  rateTimeHistory: [
+    {
+      id: "rt1",
+      oldTime: "13:00:00",
+      newTime: "10:00:00",
+      updatedAt: "2026-09-03 18:20:00",
+      updatedBy: "Daniel",
+    },
+    {
+      id: "rt2",
+      oldTime: "10:00:00",
+      newTime: "13:00:00",
+      updatedAt: "2026-09-01 10:12:00",
+      updatedBy: "张敏",
+    },
+  ],
+  ratePage: 1,
+  ratePageSize: 20,
+  payRatePage: 1,
+  payRatePageSize: 20,
+  editingCode: null,
+};
+
+const $ = (sel) => document.querySelector(sel);
+
+function formatRate(n) {
+  if (n === 0) return "0";
+  if (Math.abs(n) < 0.001) return n.toFixed(8).replace(/0+$/, "").replace(/\.$/, "");
+  if (n >= 100) return Number(n.toFixed(4)).toLocaleString("en-US", { maximumFractionDigits: 4 });
+  return Number(n.toFixed(4)).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 4 });
+}
+
+function markupLabel(markup) {
+  return `${Number(markup)}%`;
+}
+
+function applyMarkup(rate, markup) {
+  return rate * (1 + Number(markup) / 100);
+}
+
+function resolveMarkup(code) {
+  return state.markups[code] || { ...state.defaultMarkup, isDefault: true };
+}
+
+function nowStamp() {
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
+
+function switchView(view) {
+  state.view = view;
+  const isRates = view === "rates" || view === "mmcRates";
+  $("#viewRates").hidden = !isRates;
+  $("#viewPaymentRates").hidden = view !== "paymentRates";
+  $("#viewMarkup").hidden = view !== "markup";
+  $("#viewHistory").hidden = view !== "history";
+  $$nav().forEach((el) => {
+    el.classList.toggle("active", el.dataset.view === view);
+  });
+  if (isRates) {
+    syncRatesChrome(view === "mmcRates");
+    renderRates();
+  } else if (view === "paymentRates") {
+    renderPaymentRates();
+  } else if (view === "history") renderHistory();
+  else renderMarkup();
+}
+
+function syncRatesChrome(isMmc) {
+  state.isMmcRates = Boolean(isMmc);
+  const eyebrow = $("#ratesEyebrow");
+  const title = $("#ratesTitle");
+  const desc = $("#ratesDesc");
+  const table = $("#ratesTable");
+  const quoteHeader = $("#ratesQuoteHeader");
+  if (eyebrow) {
+    eyebrow.textContent = isMmc ? "MMC汇率管理 / 商户汇率记录" : "OMC聚合支付汇率管理 / 汇率记录";
+  }
+  if (title) {
+    title.textContent = isMmc ? "商户汇率记录" : "汇率记录";
+  }
+  if (desc) {
+    desc.textContent = isMmc
+      ? "展示商户侧汇率快照，可按汇率日期查询。D+1日2:00（UTC+8）同步D日的汇率。"
+      : "对客汇率 = 汇率值 × (1 + 加点%/100)。D+1日2:00（UTC+8）同步D日的汇率。";
+  }
+  if (quoteHeader) {
+    quoteHeader.textContent = isMmc ? "商户汇率值" : "对客汇率";
+  }
+  if (table) table.classList.toggle("is-mmc", Boolean(isMmc));
+  const sourceFilter = $("#rateSourceFilter");
+  if (sourceFilter) sourceFilter.hidden = Boolean(isMmc);
+  const timeFilterWrap = $("#rateTimeFilterWrap");
+  if (timeFilterWrap) timeFilterWrap.hidden = Boolean(isMmc);
+  if (isMmc && $("#rateTimeFilter")) $("#rateTimeFilter").value = "all";
+}
+
+function currencyMeta(code) {
+  return uniqueCurrencies().find((r) => r.code === code) || state.rates.find((r) => r.code === code);
+}
+
+function firstHistoryMeta(code) {
+  const rows = state.history.filter((h) => h.code === code);
+  if (!rows.length) return null;
+  return [...rows].sort((a, b) => (a.createdAt > b.createdAt ? 1 : -1))[0];
+}
+
+function pushHistory({ code, name, source, oldMarkup, newMarkup, createdBy, createdAt, updatedBy, updatedAt }) {
+  state.history.unshift({
+    id: `h${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    code,
+    name,
+    source: source || DEFAULT_SOURCE,
+    oldMarkup: Number(oldMarkup),
+    newMarkup: Number(newMarkup),
+    createdBy,
+    createdAt,
+    updatedBy,
+    updatedAt,
+  });
+}
+
+function openHistory(code) {
+  state.historyFilterCode = code || null;
+  if ($("#historySearch")) $("#historySearch").value = "";
+  switchView("history");
+}
+
+function filteredHistory() {
+  const q = ($("#historySearch")?.value || "").trim().toLowerCase();
+  return state.history.filter((h) => {
+    if (state.historyFilterCode && h.code !== state.historyFilterCode) return false;
+    if (!q) return true;
+    return (
+      h.code.toLowerCase().includes(q) ||
+      h.name.includes(q) ||
+      h.createdBy.includes(q) ||
+      h.updatedBy.includes(q)
+    );
+  });
+}
+
+function renderHistory() {
+  const rows = filteredHistory();
+  const chip = $("#historyFilterChip");
+  const clearBtn = $("#btnClearHistoryFilter");
+  if (state.historyFilterCode) {
+    const meta = currencyMeta(state.historyFilterCode);
+    chip.hidden = false;
+    chip.textContent = `当前筛选：${meta?.name || ""} ${state.historyFilterCode}`;
+    clearBtn.hidden = false;
+  } else {
+    chip.hidden = true;
+    clearBtn.hidden = true;
+  }
+
+  $("#historyBody").innerHTML = rows
+    .map(
+      (h) => `
+    <tr>
+      <td class="mono">${h.code}</td>
+      <td>${h.name}</td>
+      <td><span class="source-tag">${h.source || DEFAULT_SOURCE}</span></td>
+      <td class="markup-cell">${markupLabel(h.oldMarkup)}</td>
+      <td class="markup-cell accent">${markupLabel(h.newMarkup)}</td>
+      <td>${h.createdBy}</td>
+      <td class="mono">${h.createdAt}</td>
+      <td>${h.updatedBy}</td>
+      <td class="mono">${h.updatedAt}</td>
+    </tr>`
+    )
+    .join("");
+
+  $("#historyCount").textContent = `共 ${rows.length} 条记录`;
+}
+
+function $$nav() {
+  return [...document.querySelectorAll(".nav-item[data-view]")];
+}
+
+function filteredRates() {
+  const q = ($("#rateSearch").value || "").trim().toLowerCase();
+  const source = $("#rateSourceFilter").value;
+  const date = ($("#rateDateFilter").value || "").trim(); // YYYY-MM-DD
+  const time = $("#rateTimeFilter").value; // all | HH:MM:SS
+  const skipSource = Boolean(state.isMmcRates);
+  const skipTime = Boolean(state.isMmcRates);
+
+  return state.rates.filter((r) => {
+    if (!skipSource && source !== "all" && r.source !== source) return false;
+    const [rDate, rTime] = r.rateAt.split(" ");
+    if (date && rDate !== date) return false;
+    if (!skipTime && time !== "all" && rTime !== time) return false;
+    if (!q) return true;
+    return r.code.toLowerCase().includes(q) || r.name.includes(q);
+  });
+}
+
+function renderRates() {
+  const all = filteredRates();
+  const size = Number($("#ratePageSize").value) || 20;
+  state.ratePageSize = size;
+  const pages = Math.max(1, Math.ceil(all.length / size));
+  if (state.ratePage > pages) state.ratePage = pages;
+  const start = (state.ratePage - 1) * size;
+  const pageRows = all.slice(start, start + size);
+  const isMmc = Boolean(state.isMmcRates);
+
+  $("#rateBody").innerHTML = pageRows
+    .map((r) => {
+      const m = resolveMarkup(r.code);
+      const isCustom = Boolean(state.markups[r.code]);
+      const quote = applyMarkup(r.rate, m.markup);
+      const [rDate = "—", rTime = ""] = (r.rateAt || "").split(" ");
+      const timeLabel = rTime ? rateTimeLabel(rTime) : "—";
+      if (isMmc) {
+        return `
+    <tr>
+      <td class="mono">${rDate}</td>
+      <td class="mono">${r.code}</td>
+      <td>${r.name}</td>
+      <td class="mono accent">${formatRate(quote)}</td>
+      <td class="mono">${r.createdAt}</td>
+    </tr>`;
+      }
+      return `
+    <tr>
+      <td class="mono">${rDate}</td>
+      <td class="mono">${timeLabel}</td>
+      <td class="mono">${r.code}</td>
+      <td>${r.name}</td>
+      <td class="mono">${formatRate(r.rate)}</td>
+      <td class="markup-cell">${markupLabel(m.markup)}</td>
+      <td class="mono accent">${formatRate(quote)}</td>
+      <td>${r.source || DEFAULT_SOURCE}</td>
+      <td>${ruleLabel(isCustom)}</td>
+      <td class="mono">${r.createdAt}</td>
+      <td>${r.createdBy || "—"}</td>
+      <td class="mono">${r.updatedAt || r.createdAt}</td>
+      <td>${r.updatedBy || r.createdBy || "—"}</td>
+    </tr>`;
+    })
+    .join("");
+
+  const displayTotal = TOTAL_MOCK;
+  const from = all.length === 0 ? 0 : start + 1;
+  const to = Math.min(start + size, all.length);
+  $("#rateRange").textContent = `第 ${from}-${to} 条（本页示例 ${all.length} 条）/ 总共 ${displayTotal.toLocaleString("en-US")} 条`;
+  $("#ratePageLabel").textContent = String(state.ratePage);
+  $("#statRateAt").textContent = state.rates[0]?.rateAt || "—";
+}
+
+function filteredPaymentRates() {
+  const code = ($("#payRateCode")?.value || "").trim().toLowerCase();
+  const name = ($("#payRateName")?.value || "").trim().toLowerCase();
+  const date = ($("#payRateDate")?.value || "").trim(); // YYYY-MM-DD
+  const time = $("#payRateTime")?.value || "all"; // all | HH:MM:SS
+  const createdFrom = ($("#payRateCreatedFrom")?.value || "").trim();
+  const createdTo = ($("#payRateCreatedTo")?.value || "").trim();
+
+  return state.rates.filter((r) => {
+    if (code && !r.code.toLowerCase().includes(code)) return false;
+    if (name && !r.name.toLowerCase().includes(name)) return false;
+    const [rDate, rTime] = (r.rateAt || "").split(" ");
+    if (date && rDate !== date) return false;
+    if (time !== "all" && rTime !== time) return false;
+    const createdDate = (r.createdAt || "").split(" ")[0];
+    if (createdFrom && (!createdDate || createdDate < createdFrom)) return false;
+    if (createdTo && (!createdDate || createdDate > createdTo)) return false;
+    return true;
+  });
+}
+
+function renderPaymentRates() {
+  const all = filteredPaymentRates();
+  const size = Number($("#payRatePageSize")?.value) || 20;
+  state.payRatePageSize = size;
+  const pages = Math.max(1, Math.ceil(all.length / size));
+  if (state.payRatePage > pages) state.payRatePage = pages;
+  const start = (state.payRatePage - 1) * size;
+  const pageRows = all.slice(start, start + size);
+
+  $("#payRateBody").innerHTML = pageRows
+    .map((r) => {
+      const [rDate = "—", rTime = ""] = (r.rateAt || "").split(" ");
+      return `
+    <tr>
+      <td class="mono">${rDate}</td>
+      <td class="mono">${rTime ? rateTimeLabel(rTime) : "—"}</td>
+      <td class="mono">${r.code}</td>
+      <td>${r.name}</td>
+      <td class="mono">${formatRate(r.rate)}</td>
+      <td class="mono">${r.createdAt || "—"}</td>
+      <td>${r.source || DEFAULT_SOURCE}</td>
+    </tr>`;
+    })
+    .join("");
+
+  const from = all.length === 0 ? 0 : start + 1;
+  const to = Math.min(start + size, all.length);
+  $("#payRateRange").textContent = `第 ${from}-${to} 条 / 共 ${all.length} 条`;
+  $("#payRatePageLabel").textContent = String(state.payRatePage);
+}
+
+function uniqueCurrencies() {
+  const map = new Map();
+  [...state.rates]
+    .sort((a, b) => (a.rateAt < b.rateAt ? 1 : a.rateAt > b.rateAt ? -1 : 0))
+    .forEach((r) => {
+      if (!map.has(r.code)) map.set(r.code, r);
+    });
+  return [...map.values()];
+}
+
+function filteredMarkupRows() {
+  const q = ($("#markupSearch").value || "").trim().toLowerCase();
+  const source = $("#markupSourceFilter").value;
+  const cfg = $("#markupConfigFilter").value;
+
+  return uniqueCurrencies().filter((r) => {
+    if (source !== "all" && (r.source || DEFAULT_SOURCE) !== source) return false;
+    const custom = Boolean(state.markups[r.code]);
+    if (cfg === "custom" && !custom) return false;
+    if (cfg === "default" && custom) return false;
+    if (!q) return true;
+    return r.code.toLowerCase().includes(q) || r.name.includes(q);
+  });
+}
+
+function ruleLabel(isCustom) {
+  return isCustom ? "单独配置" : "默认值";
+}
+
+function renderMarkup() {
+  const rows = filteredMarkupRows();
+  $("#markupBody").innerHTML = rows
+    .map((r) => {
+      const m = resolveMarkup(r.code);
+      const isCustom = Boolean(state.markups[r.code]);
+      return `
+      <tr>
+        <td class="mono">${r.code}</td>
+        <td>${r.name}</td>
+        <td class="markup-cell">${markupLabel(m.markup)}</td>
+        <td class="mono">${rateTimeLabel(resolveRateTime(r.code))}</td>
+        <td>${ruleLabel(isCustom)}</td>
+        <td><span class="source-tag">${r.source || DEFAULT_SOURCE}</span></td>
+        <td>
+          <div class="row-actions">
+            <button type="button" class="text-btn" data-edit="${r.code}">编辑</button>
+            <button type="button" class="text-btn" data-history="${r.code}">历史记录</button>
+          </div>
+        </td>
+      </tr>`;
+    })
+    .join("");
+
+  const all = uniqueCurrencies();
+  const custom = Object.keys(state.markups).length;
+  $("#statConfigured").textContent = String(all.length);
+  $("#statDefault").textContent = markupLabel(state.defaultMarkup.markup);
+  if ($("#statRateTime")) $("#statRateTime").textContent = rateTimeLabel(state.defaultRateTime);
+  $("#statCustom").textContent = String(custom);
+  $("#statFallback").textContent = String(Math.max(0, all.length - custom));
+  $("#markupCount").textContent = `共 ${rows.length} 个币种`;
+
+  const usd = resolveMarkup("USD");
+  const usdValue = $("#usdMarkupValue");
+  if (usdValue) usdValue.textContent = markupLabel(usd.markup);
+}
+
+function openDrawer(code) {
+  const row = uniqueCurrencies().find((r) => r.code === code) || state.rates.find((r) => r.code === code);
+  if (!row) return;
+  const m = resolveMarkup(code);
+  state.editingCode = code;
+
+  $("#drawerTitle").textContent = `${row.name} · ${row.code}`;
+  $("#editCode").value = code;
+  $("#roCode").textContent = row.code;
+  $("#roName").textContent = row.name;
+  if ($("#roRateAt")) $("#roRateAt").textContent = rateTimeLabel(resolveRateTime(code));
+  $("#roSource").textContent = row.source || DEFAULT_SOURCE;
+  $("#editMarkup").value = m.markup;
+  $("#editMarkup").disabled = false;
+  $("#editNote").value = state.markups[code]?.note || "";
+
+  $("#drawerOverlay").hidden = false;
+  $("#drawer").classList.add("open");
+  $("#drawer").setAttribute("aria-hidden", "false");
+}
+
+function closeDrawer() {
+  $("#drawer").classList.remove("open");
+  $("#drawer").setAttribute("aria-hidden", "true");
+  $("#drawerOverlay").hidden = true;
+  state.editingCode = null;
+}
+
+function openModal() {
+  $("#modalMarkup").value = state.defaultMarkup.markup;
+  const unconfigured = document.querySelector('input[name="modalScope"][value="unconfigured"]');
+  if (unconfigured) unconfigured.checked = true;
+  updateScopeHint();
+  $("#modal").hidden = false;
+}
+
+function closeModal() {
+  $("#modal").hidden = true;
+}
+
+function openRateTimeModal() {
+  const select = $("#modalRateTime");
+  if (select) select.value = state.defaultRateTime || DEFAULT_RATE_TIME;
+  $("#rateTimeModal").hidden = false;
+}
+
+function closeRateTimeModal() {
+  $("#rateTimeModal").hidden = true;
+}
+
+function pushRateTimeHistory({ oldTime, newTime, updatedBy, updatedAt }) {
+  state.rateTimeHistory.unshift({
+    id: `rt${Date.now()}`,
+    oldTime,
+    newTime,
+    updatedBy: updatedBy || OPERATOR,
+    updatedAt: updatedAt || nowStamp(),
+  });
+}
+
+function renderMarkupValueHistory(bodyId, rows) {
+  const body = $(bodyId);
+  if (!body) return;
+  const list = rows || [];
+  if (!list.length) {
+    body.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--ink-soft)">暂无更新记录</td></tr>`;
+    return;
+  }
+  body.innerHTML = list
+    .map(
+      (h) => `
+    <tr>
+      <td class="mono">${markupLabel(h.oldMarkup)}</td>
+      <td class="mono">${markupLabel(h.newMarkup)}</td>
+      <td class="mono">${h.updatedAt || "—"}</td>
+      <td>${h.updatedBy || "—"}</td>
+    </tr>`
+    )
+    .join("");
+}
+
+function pushDefaultMarkupHistory({ oldMarkup, newMarkup, updatedBy, updatedAt }) {
+  state.defaultMarkupHistory.unshift({
+    id: `dm${Date.now()}`,
+    oldMarkup,
+    newMarkup,
+    updatedBy: updatedBy || OPERATOR,
+    updatedAt: updatedAt || nowStamp(),
+  });
+}
+
+function pushUsdMarkupHistory({ oldMarkup, newMarkup, updatedBy, updatedAt }) {
+  state.usdMarkupHistory.unshift({
+    id: `um${Date.now()}`,
+    oldMarkup,
+    newMarkup,
+    updatedBy: updatedBy || OPERATOR,
+    updatedAt: updatedAt || nowStamp(),
+  });
+}
+
+function openDefaultMarkupHistoryModal() {
+  renderMarkupValueHistory("#defaultMarkupHistoryBody", state.defaultMarkupHistory);
+  $("#defaultMarkupHistoryModal").hidden = false;
+}
+
+function closeDefaultMarkupHistoryModal() {
+  $("#defaultMarkupHistoryModal").hidden = true;
+}
+
+function openUsdMarkupHistoryModal() {
+  renderMarkupValueHistory("#usdMarkupHistoryBody", state.usdMarkupHistory);
+  $("#usdMarkupHistoryModal").hidden = false;
+}
+
+function closeUsdMarkupHistoryModal() {
+  $("#usdMarkupHistoryModal").hidden = true;
+}
+
+function renderRateTimeHistory() {
+  const body = $("#rateTimeHistoryBody");
+  if (!body) return;
+  const rows = state.rateTimeHistory || [];
+  if (!rows.length) {
+    body.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--ink-soft)">暂无更新记录</td></tr>`;
+    return;
+  }
+  body.innerHTML = rows
+    .map(
+      (h) => `
+    <tr>
+      <td class="mono">${rateTimeLabel(h.oldTime)}</td>
+      <td class="mono">${rateTimeLabel(h.newTime)}</td>
+      <td class="mono">${h.updatedAt || "—"}</td>
+      <td>${h.updatedBy || "—"}</td>
+    </tr>`
+    )
+    .join("");
+}
+
+function openRateTimeHistoryModal() {
+  renderRateTimeHistory();
+  $("#rateTimeHistoryModal").hidden = false;
+}
+
+function closeRateTimeHistoryModal() {
+  $("#rateTimeHistoryModal").hidden = true;
+}
+
+/** 可选新增币种目录（不含已在列表中的币种） */
+const CURRENCY_CATALOG = [
+  { code: "PLN", name: "波兰兹罗提" },
+  { code: "DKK", name: "丹麦克朗" },
+  { code: "NOK", name: "挪威克朗" },
+  { code: "SEK", name: "瑞典克朗" },
+  { code: "ZAR", name: "南非兰特" },
+  { code: "RUB", name: "俄罗斯卢布" },
+  { code: "CZK", name: "捷克克朗" },
+  { code: "HUF", name: "匈牙利福林" },
+  { code: "ILS", name: "以色列新谢克尔" },
+  { code: "EGP", name: "埃及镑" },
+  { code: "NGN", name: "尼日利亚奈拉" },
+  { code: "KES", name: "肯尼亚先令" },
+  { code: "PKR", name: "巴基斯坦卢比" },
+  { code: "BDT", name: "孟加拉塔卡" },
+  { code: "LKR", name: "斯里兰卡卢比" },
+  { code: "KHR", name: "柬埔寨瑞尔" },
+  { code: "LAK", name: "老挝基普" },
+  { code: "MMK", name: "缅甸元" },
+  { code: "ARS", name: "阿根廷比索" },
+  { code: "COP", name: "哥伦比亚比索" },
+  { code: "PEN", name: "秘鲁索尔" },
+  { code: "UYU", name: "乌拉圭比索" },
+  { code: "RON", name: "罗马尼亚列伊" },
+  { code: "BGN", name: "保加利亚列弗" },
+  { code: "HRK", name: "克罗地亚库纳" },
+  { code: "ISK", name: "冰岛克朗" },
+  { code: "MAD", name: "摩洛哥迪拉姆" },
+  { code: "TND", name: "突尼斯第纳尔" },
+  { code: "JOD", name: "约旦第纳尔" },
+  { code: "KWD", name: "科威特第纳尔" },
+  { code: "BHD", name: "巴林第纳尔" },
+  { code: "OMR", name: "阿曼里亚尔" },
+];
+
+function existingCurrencyCodes() {
+  return new Set(uniqueCurrencies().map((r) => r.code));
+}
+
+function availableCatalogCurrencies() {
+  const existing = existingCurrencyCodes();
+  return CURRENCY_CATALOG.filter((c) => !existing.has(c.code));
+}
+
+const RATE_TIME_SLOTS = [
+  { value: "01:00:00", label: "1:00" },
+  { value: "10:00:00", label: "10:00" },
+  { value: "13:00:00", label: "13:00" },
+  { value: "21:00:00", label: "21:00" },
+];
+const DEFAULT_RATE_TIME = "10:00:00";
+
+function rateTimeLabel(value) {
+  const normalized = normalizeRateTime(value, { emptyAsNull: false }) || state.defaultRateTime || DEFAULT_RATE_TIME;
+  return RATE_TIME_SLOTS.find((s) => s.value === normalized)?.label || normalized.slice(0, 5);
+}
+
+function resolveRateTime(code) {
+  return state.rateTimes[code] || state.defaultRateTime || DEFAULT_RATE_TIME;
+}
+
+function normalizeRateTime(input, { emptyAsNull = false } = {}) {
+  const raw = String(input ?? "").trim();
+  if (!raw) return emptyAsNull ? null : state.defaultRateTime || DEFAULT_RATE_TIME;
+  // Excel may give fraction-of-day number
+  if (/^\d+(\.\d+)?$/.test(raw) && Number(raw) < 1) {
+    const total = Math.round(Number(raw) * 24 * 60);
+    const hh = String(Math.floor(total / 60)).padStart(2, "0");
+    const mm = String(total % 60).padStart(2, "0");
+    return normalizeRateTime(`${hh}:${mm}`, { emptyAsNull });
+  }
+  const m = raw.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+  if (!m) return null;
+  const hh = String(Number(m[1])).padStart(2, "0");
+  const mm = m[2];
+  const ss = m[3] || "00";
+  const value = `${hh}:${mm}:${ss}`;
+  const allowed = RATE_TIME_SLOTS.map((s) => s.value);
+  return allowed.includes(value) ? value : null;
+}
+
+function buildRateAt(timeValue) {
+  const time = normalizeRateTime(timeValue) || state.defaultRateTime || DEFAULT_RATE_TIME;
+  const base = state.rates[0]?.rateAt || nowStamp();
+  const date = base.split(" ")[0];
+  return `${date} ${time}`;
+}
+
+function upsertCurrencyRow({ code, name, markup, source, rateTime, rateTimeExplicit = false }) {
+  const upper = String(code || "").trim().toUpperCase();
+  const label = String(name || "").trim();
+  const rateSource = String(source || DEFAULT_SOURCE).trim().toUpperCase() || DEFAULT_SOURCE;
+  if (!upper || !label) {
+    return { ok: false, reason: "missing" };
+  }
+  if (rateSource !== "XE") {
+    return { ok: false, reason: "source" };
+  }
+  const hasExplicitTime =
+    rateTimeExplicit || (rateTime !== undefined && rateTime !== null && String(rateTime).trim() !== "");
+  const normalizedTime = hasExplicitTime
+    ? normalizeRateTime(rateTime, { emptyAsNull: true })
+    : normalizeRateTime(state.defaultRateTime);
+  if (normalizedTime === null) {
+    return { ok: false, reason: "rateTime" };
+  }
+  const stamp = nowStamp();
+  const existing = uniqueCurrencies().find((r) => r.code === upper);
+  const rateAt = buildRateAt(normalizedTime);
+
+  if (existing) {
+    // 更新展示用的最新一条：按币种找最新记录改名称/来源/时点
+    const latest = [...state.rates]
+      .filter((r) => r.code === upper)
+      .sort((a, b) => (a.rateAt < b.rateAt ? 1 : a.rateAt > b.rateAt ? -1 : 0))[0];
+    if (latest) {
+      latest.name = label;
+      latest.source = rateSource;
+      latest.rateAt = rateAt;
+      latest.updatedAt = stamp;
+      latest.updatedBy = OPERATOR;
+    }
+    state.rates.forEach((r) => {
+      if (r.code === upper) r.name = label;
+    });
+  } else {
+    state.rates.unshift({
+      rateAt,
+      code: upper,
+      name: label,
+      rate: 1,
+      createdAt: stamp,
+      createdBy: OPERATOR,
+      updatedAt: stamp,
+      updatedBy: OPERATOR,
+      source: rateSource,
+    });
+  }
+
+  if (hasExplicitTime) {
+    state.rateTimes[upper] = normalizedTime;
+  }
+
+  const hasMarkup = markup !== undefined && markup !== null && String(markup).trim() !== "";
+  if (hasMarkup) {
+    const next = Number(markup);
+    if (Number.isNaN(next) || next < 0) {
+      return { ok: false, reason: "markup" };
+    }
+    const prev = resolveMarkup(upper);
+    const oldRecord = state.markups[upper];
+    const first = firstHistoryMeta(upper) || oldRecord;
+    const createdBy = oldRecord?.createdBy || first?.createdBy || OPERATOR;
+    const createdAt = oldRecord?.createdAt || first?.createdAt || stamp;
+    if (Number(prev.markup) !== next || !oldRecord) {
+      pushHistory({
+        code: upper,
+        name: label,
+        source: rateSource,
+        oldMarkup: prev.markup,
+        newMarkup: next,
+        createdBy,
+        createdAt,
+        updatedBy: OPERATOR,
+        updatedAt: stamp,
+      });
+    }
+    state.markups[upper] = {
+      markup: next,
+      note: oldRecord?.note || "",
+      createdBy,
+      createdAt,
+      updatedAt: stamp,
+      updatedBy: OPERATOR,
+    };
+  }
+
+  return { ok: true, code: upper, added: !existing };
+}
+
+function openAddCurrencyModal() {
+  const select = $("#addCurrencyCode");
+  const options = availableCatalogCurrencies();
+  select.innerHTML =
+    `<option value="">请选择币种</option>` +
+    options.map((c) => `<option value="${c.code}">${c.code} · ${c.name}</option>`).join("");
+  $("#addCurrencyName").value = "";
+  $("#addCurrencyMarkup").value = "";
+  if ($("#addCurrencySource")) $("#addCurrencySource").value = "XE";
+  $("#addCurrencyModal").hidden = false;
+  if (!options.length) {
+    toast("暂无可新增币种，请使用批量导入");
+  }
+}
+
+function closeAddCurrencyModal() {
+  $("#addCurrencyModal").hidden = true;
+}
+
+function openImportCurrencyModal() {
+  $("#importCurrencyFile").value = "";
+  $("#importFileLabel").textContent = "点击选择或拖拽文件到此处";
+  $("#importHint").hidden = true;
+  $("#importHint").textContent = "";
+  if ($("#importDefaultSource")) $("#importDefaultSource").value = "XE";
+  $("#importCurrencyModal").hidden = false;
+}
+
+function closeImportCurrencyModal() {
+  $("#importCurrencyModal").hidden = true;
+}
+
+function downloadImportTemplate() {
+  const rows = [
+    ["币种", "币种名称", "FX加点值"],
+    ["PLN", "波兰兹罗提", "0.5"],
+    ["DKK", "丹麦克朗", ""],
+    ["NOK", "挪威克朗", "1"],
+  ];
+  if (window.XLSX) {
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws["!cols"] = [{ wch: 12 }, { wch: 18 }, { wch: 12 }];
+    XLSX.utils.book_append_sheet(wb, ws, "币种导入");
+    XLSX.writeFile(wb, "币种导入模板.xlsx");
+  } else {
+    exportCsv(
+      ["币种", "币种名称", "FX加点值"],
+      [
+        ["PLN", "波兰兹罗提", "0.5"],
+        ["DKK", "丹麦克朗", ""],
+        ["NOK", "挪威克朗", "1"],
+      ],
+      "币种导入模板.csv"
+    );
+  }
+  toast("已下载导入模板");
+}
+
+function normalizeImportHeader(h) {
+  return String(h || "")
+    .trim()
+    .replace(/\s+/g, "")
+    .toLowerCase();
+}
+
+function parseImportRows(matrix, defaultSource = DEFAULT_SOURCE) {
+  if (!matrix || !matrix.length) return { error: "文件为空" };
+  const header = matrix[0].map(normalizeImportHeader);
+  const idxCode = header.findIndex((h) => h === "币种" || h === "code" || h === "currency");
+  const idxName = header.findIndex((h) => h === "币种名称" || h === "name" || h === "currencyname");
+  const idxSource = header.findIndex((h) => h === "汇率来源" || h === "source" || h === "ratesource");
+  const idxMarkup = header.findIndex(
+    (h) => h === "fx加点值" || h === "加点值" || h === "markup" || h === "fxmarkup"
+  );
+  if (idxCode < 0 || idxName < 0) {
+    return { error: "模板缺少必填列：币种、币种名称" };
+  }
+  const fallbackSource = String(defaultSource || DEFAULT_SOURCE).trim().toUpperCase() || DEFAULT_SOURCE;
+  const rows = [];
+  const errors = [];
+  for (let i = 1; i < matrix.length; i++) {
+    const row = matrix[i] || [];
+    if (row.every((c) => String(c ?? "").trim() === "")) continue;
+    const code = String(row[idxCode] ?? "").trim().toUpperCase();
+    const name = String(row[idxName] ?? "").trim();
+    const markupRaw = idxMarkup >= 0 ? row[idxMarkup] : "";
+    const sourceRaw =
+      idxSource >= 0 && String(row[idxSource] ?? "").trim()
+        ? String(row[idxSource]).trim().toUpperCase()
+        : fallbackSource;
+    if (!code || !name) {
+      errors.push(`第 ${i + 1} 行：币种与币种名称为必填`);
+      continue;
+    }
+    if (sourceRaw !== "XE") {
+      errors.push(`第 ${i + 1} 行：汇率来源仅支持 XE`);
+      continue;
+    }
+    rows.push({
+      code,
+      name,
+      markup: markupRaw,
+      source: sourceRaw,
+    });
+  }
+  if (!rows.length && errors.length) return { error: errors[0] };
+  if (!rows.length) return { error: "未解析到有效数据行" };
+  return { rows, errors };
+}
+
+function readImportFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("读取文件失败"));
+    reader.onload = () => {
+      try {
+        if (window.XLSX) {
+          const data = new Uint8Array(reader.result);
+          const wb = XLSX.read(data, { type: "array" });
+          const sheet = wb.Sheets[wb.SheetNames[0]];
+          const matrix = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+          resolve(matrix);
+          return;
+        }
+        // fallback: treat as text csv
+        const text = new TextDecoder("utf-8").decode(reader.result);
+        const matrix = text
+          .replace(/^\uFEFF/, "")
+          .split(/\r?\n/)
+          .filter((l) => l.trim())
+          .map((l) => l.split(",").map((c) => c.replace(/^"|"$/g, "").trim()));
+        resolve(matrix);
+      } catch (err) {
+        reject(err);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function getModalScope() {
+  const el = document.querySelector('input[name="modalScope"]:checked');
+  return el ? el.value : "unconfigured";
+}
+
+function updateScopeHint() {
+  const total = uniqueCurrencies().length;
+  const custom = Object.keys(state.markups).length;
+  const untouched = Math.max(0, total - custom);
+  const scope = getModalScope();
+  const hint = $("#scopeHint");
+  if (!hint) return;
+  if (scope === "all") {
+    hint.textContent = `将影响全部 ${total} 个币种；其中 ${custom} 个独立配置将被清除并改用新默认值。`;
+  } else {
+    hint.textContent = `将影响 ${untouched} 个未独立配置币种；${custom} 个已独立配置币种保持原数值不变。`;
+  }
+}
+
+function toast(msg) {
+  const el = $("#toast");
+  el.textContent = msg;
+  el.hidden = false;
+  requestAnimationFrame(() => el.classList.add("show"));
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => {
+    el.classList.remove("show");
+    setTimeout(() => {
+      el.hidden = true;
+    }, 250);
+  }, 2200);
+}
+
+function exportCsv(headers, rows, filename) {
+  const lines = [headers.join(",")].concat(rows.map((r) => r.join(",")));
+  const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+function bind() {
+  $$nav().forEach((el) => {
+    el.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (el.dataset.view === "history") state.historyFilterCode = null;
+      switchView(el.dataset.view);
+    });
+  });
+
+  $("#btnGoMarkup").addEventListener("click", () => switchView("markup"));
+
+  $("#paymentRateQueryForm")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    state.payRatePage = 1;
+    renderPaymentRates();
+  });
+  $("#btnPayRateReset")?.addEventListener("click", () => {
+    if ($("#payRateDate")) $("#payRateDate").value = "";
+    if ($("#payRateTime")) $("#payRateTime").value = "all";
+    if ($("#payRateCode")) $("#payRateCode").value = "";
+    if ($("#payRateName")) $("#payRateName").value = "";
+    if ($("#payRateCreatedFrom")) $("#payRateCreatedFrom").value = "";
+    if ($("#payRateCreatedTo")) $("#payRateCreatedTo").value = "";
+    state.payRatePage = 1;
+    renderPaymentRates();
+  });
+  $("#payRatePageSize")?.addEventListener("change", () => {
+    state.payRatePage = 1;
+    renderPaymentRates();
+  });
+  $("#payRatePrev")?.addEventListener("click", () => {
+    if (state.payRatePage > 1) {
+      state.payRatePage -= 1;
+      renderPaymentRates();
+    }
+  });
+  $("#payRateNext")?.addEventListener("click", () => {
+    const pages = Math.max(1, Math.ceil(filteredPaymentRates().length / state.payRatePageSize));
+    if (state.payRatePage < pages) {
+      state.payRatePage += 1;
+      renderPaymentRates();
+    }
+  });
+
+  ["rateSearch", "rateSourceFilter", "rateDateFilter", "rateTimeFilter"].forEach((id) => {
+    $(`#${id}`).addEventListener("input", () => {
+      state.ratePage = 1;
+      renderRates();
+    });
+    $(`#${id}`).addEventListener("change", () => {
+      state.ratePage = 1;
+      renderRates();
+    });
+  });
+
+  $("#ratePageSize").addEventListener("change", () => {
+    state.ratePage = 1;
+    renderRates();
+  });
+  $("#ratePrev").addEventListener("click", () => {
+    if (state.ratePage > 1) {
+      state.ratePage -= 1;
+      renderRates();
+    }
+  });
+  $("#rateNext").addEventListener("click", () => {
+    const pages = Math.max(1, Math.ceil(filteredRates().length / state.ratePageSize));
+    if (state.ratePage < pages) {
+      state.ratePage += 1;
+      renderRates();
+    }
+  });
+
+  $("#btnExportRates").addEventListener("click", () => {
+    const isMmc = Boolean(state.isMmcRates);
+    const headers = isMmc
+      ? ["汇率日期", "币种", "币种名称", "商户汇率值", "创建时间"]
+      : ["汇率日期", "汇率时点", "币种", "币种名称", "汇率值", "FX加点值", "对客汇率", "汇率来源", "FX加点值来源", "创建时间", "创建人", "更新时间", "更新人"];
+    exportCsv(
+      headers,
+      filteredRates().map((r) => {
+        const m = resolveMarkup(r.code);
+        const quote = applyMarkup(r.rate, m.markup);
+        const [rDate = "", rTime = ""] = (r.rateAt || "").split(" ");
+        const timeLabel = rTime ? rateTimeLabel(rTime) : "";
+        if (isMmc) {
+          return [rDate, r.code, r.name, quote, r.createdAt];
+        }
+        return [
+          rDate,
+          timeLabel,
+          r.code,
+          r.name,
+          r.rate,
+          m.markup,
+          quote,
+          r.source,
+          ruleLabel(Boolean(state.markups[r.code])),
+          r.createdAt,
+          r.createdBy || "",
+          r.updatedAt || r.createdAt,
+          r.updatedBy || r.createdBy || "",
+        ];
+      }),
+      `${isMmc ? "商户汇率记录" : "汇率记录"}-${nowStamp().slice(0, 10)}.csv`
+    );
+    toast(isMmc ? "已导出商户汇率记录" : "已导出汇率记录");
+  });
+
+  ["markupSearch", "markupSourceFilter", "markupConfigFilter"].forEach((id) => {
+    $(`#${id}`).addEventListener("input", renderMarkup);
+    $(`#${id}`).addEventListener("change", renderMarkup);
+  });
+
+  $("#markupBody").addEventListener("click", (e) => {
+    const editCode = e.target.getAttribute("data-edit");
+    if (editCode) {
+      openDrawer(editCode);
+      return;
+    }
+    const historyCode = e.target.getAttribute("data-history");
+    if (historyCode) openHistory(historyCode);
+  });
+
+  $("#btnBackMarkup").addEventListener("click", () => {
+    state.historyFilterCode = null;
+    switchView("markup");
+  });
+  $("#btnClearHistoryFilter").addEventListener("click", () => {
+    state.historyFilterCode = null;
+    renderHistory();
+  });
+  $("#historySearch").addEventListener("input", renderHistory);
+  $("#btnExportHistory").addEventListener("click", () => {
+    exportCsv(
+      ["币种", "币种名称", "汇率来源", "原FX加点", "新FX加点", "创建人", "创建时间", "更新人", "更新时间"],
+      filteredHistory().map((h) => [
+        h.code,
+        h.name,
+        h.source,
+        h.oldMarkup,
+        h.newMarkup,
+        h.createdBy,
+        h.createdAt,
+        h.updatedBy,
+        h.updatedAt,
+      ]),
+      `FX加点配置记录-${nowStamp().slice(0, 10)}.csv`
+    );
+    toast("已导出 FX 加点配置记录");
+  });
+
+  $("#btnEditDefault")?.addEventListener("click", () => openModal());
+  $("#btnStatEditDefault")?.addEventListener("click", () => openModal());
+  $("#btnStatDefaultHistory")?.addEventListener("click", () => openDefaultMarkupHistoryModal());
+  $("#btnStatEditRateTime")?.addEventListener("click", () => openRateTimeModal());
+  $("#btnStatRateTimeHistory")?.addEventListener("click", () => openRateTimeHistoryModal());
+  $("#btnStatEditUsd")?.addEventListener("click", () => {
+    if (!currencyMeta("USD") && !state.rates.some((r) => r.code === "USD")) {
+      toast("未找到 USD 币种，请先新增");
+      return;
+    }
+    openDrawer("USD");
+  });
+  $("#btnStatUsdHistory")?.addEventListener("click", () => openUsdMarkupHistoryModal());
+  $("#btnAddCurrency").addEventListener("click", () => openAddCurrencyModal());
+  $("#btnImportCurrency").addEventListener("click", () => openImportCurrencyModal());
+
+  $("#addCurrencyClose").addEventListener("click", closeAddCurrencyModal);
+  $("#addCurrencyCancel").addEventListener("click", closeAddCurrencyModal);
+  $("#addCurrencyCode").addEventListener("change", () => {
+    const code = $("#addCurrencyCode").value;
+    const hit = CURRENCY_CATALOG.find((c) => c.code === code);
+    $("#addCurrencyName").value = hit?.name || "";
+  });
+  $("#addCurrencyForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const code = $("#addCurrencyCode").value;
+    const name = $("#addCurrencyName").value.trim();
+    const source = $("#addCurrencySource")?.value || DEFAULT_SOURCE;
+    const markup = $("#addCurrencyMarkup").value;
+    if (!code) {
+      toast("请选择币种");
+      return;
+    }
+    const result = upsertCurrencyRow({ code, name, markup, source });
+    if (!result.ok) {
+      toast(
+        result.reason === "markup"
+          ? "FX加点值不合法"
+          : result.reason === "source"
+            ? "汇率来源仅支持 XE"
+            : "请完整填写币种信息"
+      );
+      return;
+    }
+    toast(result.added ? `已新增币种 ${result.code}` : `币种 ${result.code} 已存在，已更新`);
+    closeAddCurrencyModal();
+    renderMarkup();
+  });
+
+  $("#importCurrencyClose").addEventListener("click", closeImportCurrencyModal);
+  $("#importCurrencyCancel").addEventListener("click", closeImportCurrencyModal);
+  $("#btnDownloadImportTemplate").addEventListener("click", downloadImportTemplate);
+  $("#importCurrencyFile").addEventListener("change", () => {
+    const file = $("#importCurrencyFile").files?.[0];
+    $("#importFileLabel").textContent = file ? file.name : "点击选择或拖拽文件到此处";
+    $("#importHint").hidden = true;
+  });
+  $("#importCurrencyForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const file = $("#importCurrencyFile").files?.[0];
+    if (!file) {
+      toast("请先上传文件");
+      return;
+    }
+    try {
+      const matrix = await readImportFile(file);
+      const defaultSource = $("#importDefaultSource")?.value || DEFAULT_SOURCE;
+      const parsed = parseImportRows(matrix, defaultSource);
+      if (parsed.error) {
+        const hint = $("#importHint");
+        hint.hidden = false;
+        hint.textContent = parsed.error;
+        toast(parsed.error);
+        return;
+      }
+      let added = 0;
+      let updated = 0;
+      let failed = 0;
+      parsed.rows.forEach((row) => {
+        const result = upsertCurrencyRow(row);
+        if (!result.ok) {
+          failed += 1;
+          return;
+        }
+        if (result.added) added += 1;
+        else updated += 1;
+      });
+      const extra = parsed.errors?.length ? `；跳过 ${parsed.errors.length} 行无效数据` : "";
+      toast(`导入完成：新增 ${added}，更新 ${updated}${failed ? `，失败 ${failed}` : ""}${extra}`);
+      closeImportCurrencyModal();
+      renderMarkup();
+    } catch (err) {
+      console.error(err);
+      toast("文件解析失败，请检查模板格式");
+    }
+  });
+
+  $("#btnExportMarkup").addEventListener("click", () => {
+    exportCsv(
+      ["币种", "币种名称", "FX加点值", "关联汇率时点", "FX加点值来源", "汇率来源"],
+      filteredMarkupRows().map((r) => {
+        const m = resolveMarkup(r.code);
+        const custom = Boolean(state.markups[r.code]);
+        return [
+          r.code,
+          r.name,
+          m.markup,
+          rateTimeLabel(resolveRateTime(r.code)),
+          ruleLabel(custom),
+          r.source,
+        ];
+      }),
+      `FX加点配置-${nowStamp().slice(0, 10)}.csv`
+    );
+    toast("已导出 FX 加点配置");
+  });
+
+  $("#drawerClose").addEventListener("click", closeDrawer);
+  $("#btnCancel").addEventListener("click", closeDrawer);
+  $("#drawerOverlay").addEventListener("click", closeDrawer);
+
+  $("#editForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const code = state.editingCode;
+    if (!code) return;
+    const meta = currencyMeta(code);
+    const prev = resolveMarkup(code);
+    const next = Number($("#editMarkup").value);
+    if (Number.isNaN(next) || next < 0) {
+      toast("加点值不合法");
+      return;
+    }
+    const stamp = nowStamp();
+    const existing = state.markups[code];
+    const first = firstHistoryMeta(code) || existing;
+    const createdBy = existing?.createdBy || first?.createdBy || OPERATOR;
+    const createdAt = existing?.createdAt || first?.createdAt || stamp;
+
+    if (Number(prev.markup) !== Number(next) || !existing) {
+      pushHistory({
+        code,
+        name: meta?.name || code,
+        source: meta?.source || DEFAULT_SOURCE,
+        oldMarkup: prev.markup,
+        newMarkup: next,
+        createdBy,
+        createdAt,
+        updatedBy: OPERATOR,
+        updatedAt: stamp,
+      });
+      if (code === "USD" && Number(prev.markup) !== Number(next)) {
+        pushUsdMarkupHistory({
+          oldMarkup: prev.markup,
+          newMarkup: next,
+          updatedBy: OPERATOR,
+          updatedAt: stamp,
+        });
+      }
+    }
+
+    state.markups[code] = {
+      markup: next,
+      note: $("#editNote").value.trim(),
+      createdBy,
+      createdAt,
+      updatedAt: stamp,
+      updatedBy: OPERATOR,
+    };
+    toast(`已保存 ${code} 加点`);
+    closeDrawer();
+    renderMarkup();
+  });
+
+  $("#modalClose").addEventListener("click", closeModal);
+  $("#modalCancel").addEventListener("click", closeModal);
+  document.querySelectorAll('input[name="modalScope"]').forEach((el) => {
+    el.addEventListener("change", updateScopeHint);
+  });
+  $("#modalForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const markup = Number($("#modalMarkup").value);
+    const scope = getModalScope();
+    const customBefore = Object.keys(state.markups).length;
+    const total = uniqueCurrencies().length;
+    const stamp = nowStamp();
+    const oldDefault = state.defaultMarkup.markup;
+    const usdBefore = resolveMarkup("USD").markup;
+
+    if (scope === "all") {
+      uniqueCurrencies().forEach((r) => {
+        const prev = resolveMarkup(r.code);
+        if (Number(prev.markup) === markup) return;
+        const first = firstHistoryMeta(r.code) || state.markups[r.code];
+        pushHistory({
+          code: r.code,
+          name: r.name,
+          source: r.source || DEFAULT_SOURCE,
+          oldMarkup: prev.markup,
+          newMarkup: markup,
+          createdBy: first?.createdBy || OPERATOR,
+          createdAt: first?.createdAt || stamp,
+          updatedBy: OPERATOR,
+          updatedAt: stamp,
+        });
+      });
+      state.markups = {};
+      state.defaultMarkup = { markup };
+      toast(`全量生效：默认加点 ${markupLabel(markup)}，已覆盖全部 ${total} 个币种`);
+    } else {
+      state.defaultMarkup = { markup };
+      const affected = Math.max(0, total - customBefore);
+      toast(`仅未独立配置生效：默认加点 ${markupLabel(markup)}，影响 ${affected} 个币种`);
+    }
+    if (Number(oldDefault) !== Number(markup)) {
+      pushDefaultMarkupHistory({
+        oldMarkup: oldDefault,
+        newMarkup: markup,
+        updatedBy: OPERATOR,
+        updatedAt: stamp,
+      });
+    }
+    const usdAfter = resolveMarkup("USD").markup;
+    if (Number(usdBefore) !== Number(usdAfter)) {
+      pushUsdMarkupHistory({
+        oldMarkup: usdBefore,
+        newMarkup: usdAfter,
+        updatedBy: OPERATOR,
+        updatedAt: stamp,
+      });
+    }
+    closeModal();
+    renderMarkup();
+  });
+
+  $("#rateTimeModalClose")?.addEventListener("click", closeRateTimeModal);
+  $("#rateTimeModalCancel")?.addEventListener("click", closeRateTimeModal);
+  $("#rateTimeModalForm")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const nextTime = normalizeRateTime($("#modalRateTime")?.value, { emptyAsNull: true });
+    if (!nextTime) {
+      toast("关联汇率时点仅支持 1:00 / 10:00 / 13:00 / 21:00");
+      return;
+    }
+    const prevTime = state.defaultRateTime || DEFAULT_RATE_TIME;
+    if (prevTime !== nextTime) {
+      pushRateTimeHistory({
+        oldTime: prevTime,
+        newTime: nextTime,
+        updatedBy: OPERATOR,
+        updatedAt: nowStamp(),
+      });
+    }
+    state.defaultRateTime = nextTime;
+    toast(`商户关联汇率时点已更新为 ${rateTimeLabel(nextTime)}`);
+    closeRateTimeModal();
+    renderMarkup();
+  });
+
+  $("#rateTimeHistoryClose")?.addEventListener("click", closeRateTimeHistoryModal);
+  $("#rateTimeHistoryOk")?.addEventListener("click", closeRateTimeHistoryModal);
+  $("#defaultMarkupHistoryClose")?.addEventListener("click", closeDefaultMarkupHistoryModal);
+  $("#defaultMarkupHistoryOk")?.addEventListener("click", closeDefaultMarkupHistoryModal);
+  $("#usdMarkupHistoryClose")?.addEventListener("click", closeUsdMarkupHistoryModal);
+  $("#usdMarkupHistoryOk")?.addEventListener("click", closeUsdMarkupHistoryModal);
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      closeDrawer();
+      closeModal();
+      closeRateTimeModal();
+      closeRateTimeHistoryModal();
+      closeDefaultMarkupHistoryModal();
+      closeUsdMarkupHistoryModal();
+      closeAddCurrencyModal();
+      closeImportCurrencyModal();
+    }
+  });
+}
+
+bind();
+switchView("markup");
+
+  </script>
+</body>
+</html>
