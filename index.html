@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>DeepGrow 汇率中心 · FX加点配置原型 v1894（单文件）</title>
+  <title>DeepGrow 汇率中心 · FX加点配置原型 v1902（单文件）</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -253,6 +253,9 @@ h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
   font-size: 13px;
   color: var(--ink-soft);
   white-space: nowrap;
+}
+.filter-pair[hidden] {
+  display: none !important;
 }
 .filter-pair select,
 .filter-pair input {
@@ -718,7 +721,7 @@ h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
         <div class="brand-mark" aria-hidden="true"></div>
         <div>
           <div class="brand-name">DeepGrow</div>
-          <div class="brand-sub">汇率中心 · v1894 · 单文件原型</div>
+          <div class="brand-sub">汇率中心 · v1902 · 单文件原型</div>
         </div>
       </div>
       <nav class="nav">
@@ -773,11 +776,11 @@ h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
               <option value="XE" selected>XE</option>
             </select>
             <label class="filter-pair">
-              <span>日期</span>
+              <span>汇率日期</span>
               <input id="rateDateFilter" type="date" class="mono filter-input" aria-label="汇率日期" />
             </label>
-            <label class="filter-pair">
-              <span>时点</span>
+            <label class="filter-pair" id="rateTimeFilterWrap">
+              <span>汇率时点</span>
               <select id="rateTimeFilter" aria-label="汇率时点">
                 <option value="all">全部时点</option>
                 <option value="01:00:00">1:00</option>
@@ -792,13 +795,14 @@ h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
             <table class="table plain" id="ratesTable">
               <thead>
                 <tr>
-                  <th>汇率时点</th>
+                  <th>汇率日期</th>
+                  <th class="col-omc-only">汇率时点</th>
                   <th>币种</th>
                   <th>币种名称</th>
                   <th class="col-omc-only">汇率值</th>
                   <th class="col-omc-only">FX加点值</th>
                   <th id="ratesQuoteHeader">对客汇率</th>
-                  <th>汇率来源</th>
+                  <th class="col-omc-only">汇率来源</th>
                   <th class="col-omc-only">FX加点值来源</th>
                   <th>创建时间</th>
                   <th class="col-omc-only">创建人</th>
@@ -837,11 +841,11 @@ h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
         <section class="panel">
           <form class="query-bar" id="paymentRateQueryForm">
             <label class="filter-pair">
-              <span>日期</span>
+              <span>汇率日期</span>
               <input id="payRateDate" type="date" class="mono filter-input" aria-label="汇率日期" />
             </label>
             <label class="filter-pair">
-              <span>时点</span>
+              <span>汇率时点</span>
               <select id="payRateTime" aria-label="汇率时点">
                 <option value="all">全部时点</option>
                 <option value="01:00:00">1:00</option>
@@ -876,6 +880,7 @@ h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
             <table class="table plain">
               <thead>
                 <tr>
+                  <th>汇率日期</th>
                   <th>汇率时点</th>
                   <th>币种</th>
                   <th>币种名称</th>
@@ -1274,16 +1279,6 @@ h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
           </select>
         </label>
         <label class="field">
-          <span>关联汇率时点（可选）</span>
-          <select id="addCurrencyRateTime">
-            <option value="">不选择（走商户关联默认时点）</option>
-            <option value="01:00:00">1:00</option>
-            <option value="10:00:00">10:00</option>
-            <option value="13:00:00">13:00</option>
-            <option value="21:00:00">21:00</option>
-          </select>
-        </label>
-        <label class="field">
           <span>FX加点值（%）（可选）</span>
           <input id="addCurrencyMarkup" class="mono" type="number" step="any" min="0" placeholder="不填则走全局默认" />
         </label>
@@ -1318,15 +1313,6 @@ h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
               <option value="XE" selected>XE</option>
             </select>
           </label>
-          <label class="field">
-            <span>默认关联汇率时点（文件未填时使用）</span>
-            <select id="importDefaultRateTime">
-              <option value="01:00:00">1:00</option>
-              <option value="10:00:00" selected>10:00</option>
-              <option value="13:00:00">13:00</option>
-              <option value="21:00:00">21:00</option>
-            </select>
-          </label>
           <div class="import-step">
             <strong>2. 上传文件</strong>
             <label class="file-drop">
@@ -1351,45 +1337,45 @@ const DEFAULT_SOURCE = "XE";
 
 /** 汇率记录字段：汇率时点 / 币种 / 币种名称 / 汇率值 / 创建时间 / 汇率来源 */
 const RATE_SEED = [
-  { rateAt: "2026-09-03 21:00:00", code: "CLP", name: "智利比索", rate: 932.0153, createdAt: "2026-09-04 01:30:08", source: "XE" },
-  { rateAt: "2026-09-03 21:00:00", code: "BND", name: "文莱元", rate: 1.2872, createdAt: "2026-09-04 01:30:08", source: "XE" },
-  { rateAt: "2026-09-03 21:00:00", code: "QAR", name: "卡塔尔里亚尔", rate: 3.64, createdAt: "2026-09-04 01:30:08", source: "XE" },
-  { rateAt: "2026-09-03 21:00:00", code: "PHP", name: "菲律宾比索", rate: 57.142, createdAt: "2026-09-04 01:30:08", source: "XE" },
-  { rateAt: "2026-09-03 21:00:00", code: "XAU", name: "黄金", rate: 0.000281, createdAt: "2026-09-04 01:30:08", source: "XE" },
-  { rateAt: "2026-09-03 21:00:00", code: "XBT", name: "比特币", rate: 0.00000894, createdAt: "2026-09-04 01:30:08", source: "XE" },
-  { rateAt: "2026-09-03 21:00:00", code: "TWD", name: "新台币", rate: 30.682, createdAt: "2026-09-04 01:30:08", source: "XE" },
-  { rateAt: "2026-09-03 21:00:00", code: "MOP", name: "澳门元", rate: 8.0375, createdAt: "2026-09-04 01:30:08", source: "XE" },
-  { rateAt: "2026-09-03 21:00:00", code: "HKD", name: "港币", rate: 7.7997, createdAt: "2026-09-04 01:30:08", source: "XE" },
-  { rateAt: "2026-09-03 21:00:00", code: "CAD", name: "加拿大元", rate: 1.3794, createdAt: "2026-09-04 01:30:08", source: "XE" },
-  { rateAt: "2026-09-03 21:00:00", code: "AUD", name: "澳大利亚元", rate: 1.5288, createdAt: "2026-09-04 01:30:08", source: "XE" },
-  { rateAt: "2026-09-03 21:00:00", code: "CHF", name: "瑞士法郎", rate: 0.7977, createdAt: "2026-09-04 01:30:08", source: "XE" },
-  { rateAt: "2026-09-03 21:00:00", code: "SGD", name: "新加坡元", rate: 1.2871, createdAt: "2026-09-04 01:30:08", source: "XE" },
-  { rateAt: "2026-09-03 21:00:00", code: "NZD", name: "新西兰元", rate: 1.7039, createdAt: "2026-09-04 01:30:08", source: "XE" },
-  { rateAt: "2026-09-03 21:00:00", code: "JPY", name: "日元", rate: 148.3455, createdAt: "2026-09-04 01:30:08", source: "XE" },
-  { rateAt: "2026-09-03 21:00:00", code: "GBP", name: "英镑", rate: 0.7422, createdAt: "2026-09-04 01:30:08", source: "XE" },
-  { rateAt: "2026-09-03 21:00:00", code: "EUR", name: "欧元", rate: 0.8591, createdAt: "2026-09-04 01:30:08", source: "XE" },
-  { rateAt: "2026-09-03 21:00:00", code: "USD", name: "美元", rate: 1, createdAt: "2026-09-04 01:30:08", source: "XE" },
-  { rateAt: "2026-09-03 21:00:00", code: "CNY", name: "人民币", rate: 7.1214, createdAt: "2026-09-04 01:30:08", source: "XE" },
-  { rateAt: "2026-09-03 21:00:00", code: "KRW", name: "韩元", rate: 1392.5, createdAt: "2026-09-04 01:30:08", source: "XE" },
-  { rateAt: "2026-09-03 21:00:00", code: "THB", name: "泰铢", rate: 32.185, createdAt: "2026-09-04 01:30:08", source: "XE" },
-  { rateAt: "2026-09-03 21:00:00", code: "IDR", name: "印尼盾", rate: 16320, createdAt: "2026-09-04 01:30:08", source: "XE" },
-  { rateAt: "2026-09-03 21:00:00", code: "BRL", name: "巴西雷亚尔", rate: 5.428, createdAt: "2026-09-04 01:30:08", source: "XE" },
-  { rateAt: "2026-09-03 21:00:00", code: "MXN", name: "墨西哥比索", rate: 19.852, createdAt: "2026-09-04 01:30:08", source: "XE" },
-  { rateAt: "2026-09-03 21:00:00", code: "INR", name: "印度卢比", rate: 88.142, createdAt: "2026-09-04 01:30:08", source: "XE" },
-  { rateAt: "2026-09-03 21:00:00", code: "AED", name: "阿联酋迪拉姆", rate: 3.6725, createdAt: "2026-09-04 01:30:08", source: "XE" },
-  { rateAt: "2026-09-03 21:00:00", code: "TRY", name: "土耳其里拉", rate: 41.25, createdAt: "2026-09-04 01:30:08", source: "XE" },
-  { rateAt: "2026-09-03 21:00:00", code: "VND", name: "越南盾", rate: 24850, createdAt: "2026-09-04 01:30:08", source: "XE" },
-  { rateAt: "2026-09-03 21:00:00", code: "MYR", name: "马来西亚林吉特", rate: 4.215, createdAt: "2026-09-04 01:30:08", source: "XE" },
-  { rateAt: "2026-09-03 21:00:00", code: "SAR", name: "沙特里亚尔", rate: 3.75, createdAt: "2026-09-04 01:30:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "CLP", name: "智利比索", rate: 932.0153, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "BND", name: "文莱元", rate: 1.2872, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "QAR", name: "卡塔尔里亚尔", rate: 3.64, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "PHP", name: "菲律宾比索", rate: 57.142, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "XAU", name: "黄金", rate: 0.000281, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "XBT", name: "比特币", rate: 0.00000894, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "TWD", name: "新台币", rate: 30.682, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "MOP", name: "澳门元", rate: 8.0375, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "HKD", name: "港币", rate: 7.7997, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "CAD", name: "加拿大元", rate: 1.3794, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "AUD", name: "澳大利亚元", rate: 1.5288, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "CHF", name: "瑞士法郎", rate: 0.7977, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "SGD", name: "新加坡元", rate: 1.2871, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "NZD", name: "新西兰元", rate: 1.7039, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "JPY", name: "日元", rate: 148.3455, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "GBP", name: "英镑", rate: 0.7422, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "EUR", name: "欧元", rate: 0.8591, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "USD", name: "美元", rate: 1, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "CNY", name: "人民币", rate: 7.1214, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "KRW", name: "韩元", rate: 1392.5, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "THB", name: "泰铢", rate: 32.185, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "IDR", name: "印尼盾", rate: 16320, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "BRL", name: "巴西雷亚尔", rate: 5.428, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "MXN", name: "墨西哥比索", rate: 19.852, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "INR", name: "印度卢比", rate: 88.142, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "AED", name: "阿联酋迪拉姆", rate: 3.6725, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "TRY", name: "土耳其里拉", rate: 41.25, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "VND", name: "越南盾", rate: 24850, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "MYR", name: "马来西亚林吉特", rate: 4.215, createdAt: "2026-09-04 02:05:08", source: "XE" },
+  { rateAt: "2026-09-03 21:00:00", code: "SAR", name: "沙特里亚尔", rate: 3.75, createdAt: "2026-09-04 02:05:08", source: "XE" },
   // 另一汇率时点，便于按时点查询演示
-  { rateAt: "2026-09-02 21:00:00", code: "USD", name: "美元", rate: 1, createdAt: "2026-09-03 01:28:11", source: "XE" },
-  { rateAt: "2026-09-02 21:00:00", code: "EUR", name: "欧元", rate: 0.8612, createdAt: "2026-09-03 01:28:11", source: "XE" },
-  { rateAt: "2026-09-02 21:00:00", code: "GBP", name: "英镑", rate: 0.7448, createdAt: "2026-09-03 01:28:11", source: "XE" },
-  { rateAt: "2026-09-02 21:00:00", code: "JPY", name: "日元", rate: 147.982, createdAt: "2026-09-03 01:28:11", source: "XE" },
-  { rateAt: "2026-09-02 21:00:00", code: "HKD", name: "港币", rate: 7.8012, createdAt: "2026-09-03 01:28:11", source: "XE" },
-  { rateAt: "2026-09-02 21:00:00", code: "SGD", name: "新加坡元", rate: 1.2895, createdAt: "2026-09-03 01:28:11", source: "XE" },
-  { rateAt: "2026-09-02 21:00:00", code: "CNY", name: "人民币", rate: 7.1188, createdAt: "2026-09-03 01:28:11", source: "XE" },
-  { rateAt: "2026-09-02 21:00:00", code: "AUD", name: "澳大利亚元", rate: 1.531, createdAt: "2026-09-03 01:28:11", source: "XE" },
+  { rateAt: "2026-09-02 21:00:00", code: "USD", name: "美元", rate: 1, createdAt: "2026-09-03 02:05:08", source: "XE" },
+  { rateAt: "2026-09-02 21:00:00", code: "EUR", name: "欧元", rate: 0.8612, createdAt: "2026-09-03 02:05:08", source: "XE" },
+  { rateAt: "2026-09-02 21:00:00", code: "GBP", name: "英镑", rate: 0.7448, createdAt: "2026-09-03 02:05:08", source: "XE" },
+  { rateAt: "2026-09-02 21:00:00", code: "JPY", name: "日元", rate: 147.982, createdAt: "2026-09-03 02:05:08", source: "XE" },
+  { rateAt: "2026-09-02 21:00:00", code: "HKD", name: "港币", rate: 7.8012, createdAt: "2026-09-03 02:05:08", source: "XE" },
+  { rateAt: "2026-09-02 21:00:00", code: "SGD", name: "新加坡元", rate: 1.2895, createdAt: "2026-09-03 02:05:08", source: "XE" },
+  { rateAt: "2026-09-02 21:00:00", code: "CNY", name: "人民币", rate: 7.1188, createdAt: "2026-09-03 02:05:08", source: "XE" },
+  { rateAt: "2026-09-02 21:00:00", code: "AUD", name: "澳大利亚元", rate: 1.531, createdAt: "2026-09-03 02:05:08", source: "XE" },
   { rateAt: "2026-09-03 01:00:00", code: "USD", name: "美元", rate: 1, createdAt: "2026-09-03 05:12:03", source: "XE" },
   { rateAt: "2026-09-03 01:00:00", code: "EUR", name: "欧元", rate: 0.8602, createdAt: "2026-09-03 05:12:03", source: "XE" },
   { rateAt: "2026-09-03 01:00:00", code: "JPY", name: "日元", rate: 148.12, createdAt: "2026-09-03 05:12:03", source: "XE" },
@@ -1562,13 +1548,18 @@ function syncRatesChrome(isMmc) {
   }
   if (desc) {
     desc.textContent = isMmc
-      ? "展示商户侧汇率快照，可按日期与时点查询。D+1日2:00（UTC+8）同步D日的汇率。"
+      ? "展示商户侧汇率快照，可按汇率日期查询。D+1日2:00（UTC+8）同步D日的汇率。"
       : "对客汇率 = 汇率值 × (1 + 加点%/100)。D+1日2:00（UTC+8）同步D日的汇率。";
   }
   if (quoteHeader) {
     quoteHeader.textContent = isMmc ? "商户汇率值" : "对客汇率";
   }
   if (table) table.classList.toggle("is-mmc", Boolean(isMmc));
+  const sourceFilter = $("#rateSourceFilter");
+  if (sourceFilter) sourceFilter.hidden = Boolean(isMmc);
+  const timeFilterWrap = $("#rateTimeFilterWrap");
+  if (timeFilterWrap) timeFilterWrap.hidden = Boolean(isMmc);
+  if (isMmc && $("#rateTimeFilter")) $("#rateTimeFilter").value = "all";
 }
 
 function currencyMeta(code) {
@@ -1659,12 +1650,14 @@ function filteredRates() {
   const source = $("#rateSourceFilter").value;
   const date = ($("#rateDateFilter").value || "").trim(); // YYYY-MM-DD
   const time = $("#rateTimeFilter").value; // all | HH:MM:SS
+  const skipSource = Boolean(state.isMmcRates);
+  const skipTime = Boolean(state.isMmcRates);
 
   return state.rates.filter((r) => {
-    if (source !== "all" && r.source !== source) return false;
+    if (!skipSource && source !== "all" && r.source !== source) return false;
     const [rDate, rTime] = r.rateAt.split(" ");
     if (date && rDate !== date) return false;
-    if (time !== "all" && rTime !== time) return false;
+    if (!skipTime && time !== "all" && rTime !== time) return false;
     if (!q) return true;
     return r.code.toLowerCase().includes(q) || r.name.includes(q);
   });
@@ -1685,20 +1678,22 @@ function renderRates() {
       const m = resolveMarkup(r.code);
       const isCustom = Boolean(state.markups[r.code]);
       const quote = applyMarkup(r.rate, m.markup);
+      const [rDate = "—", rTime = ""] = (r.rateAt || "").split(" ");
+      const timeLabel = rTime ? rateTimeLabel(rTime) : "—";
       if (isMmc) {
         return `
     <tr>
-      <td class="mono">${r.rateAt}</td>
+      <td class="mono">${rDate}</td>
       <td class="mono">${r.code}</td>
       <td>${r.name}</td>
       <td class="mono accent">${formatRate(quote)}</td>
-      <td>${r.source || DEFAULT_SOURCE}</td>
       <td class="mono">${r.createdAt}</td>
     </tr>`;
       }
       return `
     <tr>
-      <td class="mono">${r.rateAt}</td>
+      <td class="mono">${rDate}</td>
+      <td class="mono">${timeLabel}</td>
       <td class="mono">${r.code}</td>
       <td>${r.name}</td>
       <td class="mono">${formatRate(r.rate)}</td>
@@ -1753,17 +1748,19 @@ function renderPaymentRates() {
   const pageRows = all.slice(start, start + size);
 
   $("#payRateBody").innerHTML = pageRows
-    .map(
-      (r) => `
+    .map((r) => {
+      const [rDate = "—", rTime = ""] = (r.rateAt || "").split(" ");
+      return `
     <tr>
-      <td class="mono">${r.rateAt}</td>
+      <td class="mono">${rDate}</td>
+      <td class="mono">${rTime ? rateTimeLabel(rTime) : "—"}</td>
       <td class="mono">${r.code}</td>
       <td>${r.name}</td>
       <td class="mono">${formatRate(r.rate)}</td>
       <td class="mono">${r.createdAt || "—"}</td>
       <td>${r.source || DEFAULT_SOURCE}</td>
-    </tr>`
-    )
+    </tr>`;
+    })
     .join("");
 
   const from = all.length === 0 ? 0 : start + 1;
@@ -2178,7 +2175,6 @@ function openAddCurrencyModal() {
   $("#addCurrencyName").value = "";
   $("#addCurrencyMarkup").value = "";
   if ($("#addCurrencySource")) $("#addCurrencySource").value = "XE";
-  if ($("#addCurrencyRateTime")) $("#addCurrencyRateTime").value = "";
   $("#addCurrencyModal").hidden = false;
   if (!options.length) {
     toast("暂无可新增币种，请使用批量导入");
@@ -2195,7 +2191,6 @@ function openImportCurrencyModal() {
   $("#importHint").hidden = true;
   $("#importHint").textContent = "";
   if ($("#importDefaultSource")) $("#importDefaultSource").value = "XE";
-  if ($("#importDefaultRateTime")) $("#importDefaultRateTime").value = state.defaultRateTime || DEFAULT_RATE_TIME;
   $("#importCurrencyModal").hidden = false;
 }
 
@@ -2237,15 +2232,12 @@ function normalizeImportHeader(h) {
     .toLowerCase();
 }
 
-function parseImportRows(matrix, defaultSource = DEFAULT_SOURCE, defaultRateTime = DEFAULT_RATE_TIME) {
+function parseImportRows(matrix, defaultSource = DEFAULT_SOURCE) {
   if (!matrix || !matrix.length) return { error: "文件为空" };
   const header = matrix[0].map(normalizeImportHeader);
   const idxCode = header.findIndex((h) => h === "币种" || h === "code" || h === "currency");
   const idxName = header.findIndex((h) => h === "币种名称" || h === "name" || h === "currencyname");
   const idxSource = header.findIndex((h) => h === "汇率来源" || h === "source" || h === "ratesource");
-  const idxRateTime = header.findIndex(
-    (h) => h === "关联汇率时点" || h === "汇率时点" || h === "ratetime" || h === "rateat"
-  );
   const idxMarkup = header.findIndex(
     (h) => h === "fx加点值" || h === "加点值" || h === "markup" || h === "fxmarkup"
   );
@@ -2253,7 +2245,6 @@ function parseImportRows(matrix, defaultSource = DEFAULT_SOURCE, defaultRateTime
     return { error: "模板缺少必填列：币种、币种名称" };
   }
   const fallbackSource = String(defaultSource || DEFAULT_SOURCE).trim().toUpperCase() || DEFAULT_SOURCE;
-  const fallbackRateTime = normalizeRateTime(defaultRateTime) || state.defaultRateTime || DEFAULT_RATE_TIME;
   const rows = [];
   const errors = [];
   for (let i = 1; i < matrix.length; i++) {
@@ -2266,9 +2257,6 @@ function parseImportRows(matrix, defaultSource = DEFAULT_SOURCE, defaultRateTime
       idxSource >= 0 && String(row[idxSource] ?? "").trim()
         ? String(row[idxSource]).trim().toUpperCase()
         : fallbackSource;
-    const fileHasRateTime = idxRateTime >= 0 && String(row[idxRateTime] ?? "").trim() !== "";
-    const rateTimeRaw = fileHasRateTime ? row[idxRateTime] : fallbackRateTime;
-    const rateTime = normalizeRateTime(rateTimeRaw, { emptyAsNull: true });
     if (!code || !name) {
       errors.push(`第 ${i + 1} 行：币种与币种名称为必填`);
       continue;
@@ -2277,17 +2265,11 @@ function parseImportRows(matrix, defaultSource = DEFAULT_SOURCE, defaultRateTime
       errors.push(`第 ${i + 1} 行：汇率来源仅支持 XE`);
       continue;
     }
-    if (rateTime === null) {
-      errors.push(`第 ${i + 1} 行：关联汇率时点仅支持 1:00 / 10:00 / 13:00 / 21:00`);
-      continue;
-    }
     rows.push({
       code,
       name,
       markup: markupRaw,
       source: sourceRaw,
-      rateTime,
-      rateTimeExplicit: fileHasRateTime,
     });
   }
   if (!rows.length && errors.length) return { error: errors[0] };
@@ -2443,18 +2425,21 @@ function bind() {
   $("#btnExportRates").addEventListener("click", () => {
     const isMmc = Boolean(state.isMmcRates);
     const headers = isMmc
-      ? ["汇率时点", "币种", "币种名称", "商户汇率值", "汇率来源", "创建时间"]
-      : ["汇率时点", "币种", "币种名称", "汇率值", "FX加点值", "对客汇率", "汇率来源", "FX加点值来源", "创建时间", "创建人", "更新时间", "更新人"];
+      ? ["汇率日期", "币种", "币种名称", "商户汇率值", "创建时间"]
+      : ["汇率日期", "汇率时点", "币种", "币种名称", "汇率值", "FX加点值", "对客汇率", "汇率来源", "FX加点值来源", "创建时间", "创建人", "更新时间", "更新人"];
     exportCsv(
       headers,
       filteredRates().map((r) => {
         const m = resolveMarkup(r.code);
         const quote = applyMarkup(r.rate, m.markup);
+        const [rDate = "", rTime = ""] = (r.rateAt || "").split(" ");
+        const timeLabel = rTime ? rateTimeLabel(rTime) : "";
         if (isMmc) {
-          return [r.rateAt, r.code, r.name, quote, r.source, r.createdAt];
+          return [rDate, r.code, r.name, quote, r.createdAt];
         }
         return [
-          r.rateAt,
+          rDate,
+          timeLabel,
           r.code,
           r.name,
           r.rate,
@@ -2544,30 +2529,19 @@ function bind() {
     const code = $("#addCurrencyCode").value;
     const name = $("#addCurrencyName").value.trim();
     const source = $("#addCurrencySource")?.value || DEFAULT_SOURCE;
-    const rateTimeRaw = $("#addCurrencyRateTime")?.value || "";
-    const rateTimeExplicit = Boolean(String(rateTimeRaw).trim());
     const markup = $("#addCurrencyMarkup").value;
     if (!code) {
       toast("请选择币种");
       return;
     }
-    const result = upsertCurrencyRow({
-      code,
-      name,
-      markup,
-      source,
-      rateTime: rateTimeExplicit ? rateTimeRaw : undefined,
-      rateTimeExplicit,
-    });
+    const result = upsertCurrencyRow({ code, name, markup, source });
     if (!result.ok) {
       toast(
         result.reason === "markup"
           ? "FX加点值不合法"
           : result.reason === "source"
             ? "汇率来源仅支持 XE"
-            : result.reason === "rateTime"
-              ? "关联汇率时点仅支持 1:00 / 10:00 / 13:00 / 21:00"
-              : "请完整填写币种信息"
+            : "请完整填写币种信息"
       );
       return;
     }
@@ -2594,8 +2568,7 @@ function bind() {
     try {
       const matrix = await readImportFile(file);
       const defaultSource = $("#importDefaultSource")?.value || DEFAULT_SOURCE;
-      const defaultRateTime = $("#importDefaultRateTime")?.value || state.defaultRateTime || DEFAULT_RATE_TIME;
-      const parsed = parseImportRows(matrix, defaultSource, defaultRateTime);
+      const parsed = parseImportRows(matrix, defaultSource);
       if (parsed.error) {
         const hint = $("#importHint");
         hint.hidden = false;
