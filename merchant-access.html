@@ -129,11 +129,32 @@
     .panel-body { padding: 20px; }
     .view[hidden] { display: none !important; }
     .cred-grid { display: grid; gap: 14px; }
+    .system-switch {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
+      padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: #fff;
+    }
+    .system-switch-label { margin-right: auto; font-size: 13px; color: var(--muted); font-weight: 600; }
+    .system-option {
+      border: 1px solid var(--line); background: #fff; color: var(--muted);
+      border-radius: 9px; padding: 8px 13px; font: inherit; font-size: 13px;
+      font-weight: 600; cursor: pointer;
+    }
+    .system-option.active { color: #fff; background: var(--accent); border-color: var(--accent); }
+    .cred-mode[hidden] { display: none !important; }
     .field-row {
       display: grid; grid-template-columns: 160px 1fr auto; gap: 12px; align-items: center;
       padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; background: #fff;
     }
     .field-row label { font-size: 13px; color: var(--muted); font-weight: 600; }
+    .key-summary { min-width: 0; }
+    .key-summary strong { display: block; font-size: 13px; margin-bottom: 4px; }
+    .key-summary small { display: block; color: var(--muted); font-size: 12px; }
+    .key-box {
+      margin: 0; padding: 12px; border: 1px solid var(--line); border-radius: 10px;
+      background: #f8f6f0; color: #334155; font-family: var(--mono); font-size: 11px;
+      line-height: 1.5; white-space: pre-wrap; word-break: break-all; max-height: 112px; overflow: auto;
+    }
+    .file-input { display: none; }
     .mono { font-family: var(--mono); font-size: 13px; }
     .secret-mask { letter-spacing: 0.12em; }
     .meta-row {
@@ -234,57 +255,94 @@
         </div>
       </header>
 
-      <section class="checklist" aria-label="上线检查">
-        <article class="check-card">
-          <div class="label">API 凭证</div>
-          <div class="value"><span class="pill ok" id="statusCred">已同步</span></div>
-        </article>
-        <article class="check-card">
-          <div class="label">IP 白名单</div>
-          <div class="value"><span class="pill" id="statusIp">—</span></div>
-        </article>
-        <article class="check-card">
-          <div class="label">回调地址</div>
-          <div class="value"><span class="pill" id="statusCb">—</span></div>
-        </article>
-      </section>
-
       <div class="tabs" role="tablist">
-        <button type="button" class="tab active" data-tab="cred">API 凭证</button>
-        <button type="button" class="tab" data-tab="ip">IP 白名单</button>
-        <button type="button" class="tab" data-tab="callback">回调地址</button>
+        <button type="button" class="tab active" data-tab="cred">API 凭证-生产环境</button>
+        <button type="button" class="tab" data-tab="ip">IP 白名单-生产环境</button>
+        <button type="button" class="tab" data-tab="callback">回调地址-生产环境</button>
       </div>
 
       <!-- API 凭证 -->
       <section class="view panel" id="viewCred">
         <div class="panel-head">
           <div>
-            <h2>API 凭证</h2>
-            <p>由 DeepGrow 在商户创建成功时自动生成并同步，商户不可自行填写 Key / Secret。</p>
+            <h2>API 凭证-生产环境</h2>
+            <p>根据商户接入系统展示对应凭证。接入系统类型由 DeepGrow 配置，商户不可修改。</p>
           </div>
-          <span class="pill ok">生产环境</span>
         </div>
         <div class="panel-body">
-          <div class="cred-grid">
-            <div class="field-row">
-              <label>App Key</label>
-              <code class="mono" id="appKey">dg_live_8f3a2c91b0e74d6a</code>
-              <button type="button" class="btn" data-copy="appKey">复制</button>
-            </div>
-            <div class="field-row">
-              <label>App Secret</label>
-              <code class="mono secret-mask" id="appSecret">••••••••••••••••••••••••••••••••</code>
-              <div style="display:flex;gap:8px;">
-                <button type="button" class="btn" id="btnReveal">查看</button>
-                <button type="button" class="btn" id="btnCopySecret" hidden>复制</button>
+          <div class="system-switch">
+            <span class="system-switch-label">接入系统（原型演示切换）</span>
+            <button type="button" class="system-option active" data-system="legacy">老系统</button>
+            <button type="button" class="system-option" data-system="new">新系统</button>
+          </div>
+
+          <div class="cred-mode" id="legacyCredentials">
+            <div class="cred-grid">
+              <div class="field-row">
+                <label>App Key</label>
+                <code class="mono" id="appKey">dg_live_8f3a2c91b0e74d6a</code>
+                <button type="button" class="btn" data-copy="appKey" data-copy-label="App Key">复制</button>
+              </div>
+              <div class="field-row">
+                <label>App Secret</label>
+                <code class="mono secret-mask" id="appSecret">••••••••••••••••••••••••••••••••</code>
+                <div style="display:flex;gap:8px;">
+                  <button type="button" class="btn" id="btnReveal">查看</button>
+                  <button type="button" class="btn" id="btnCopySecret" hidden>复制</button>
+                </div>
               </div>
             </div>
+            <div class="meta-row">
+              <span>创建时间 <strong class="mono">2026-09-11 10:08:22</strong></span>
+            </div>
+            <div class="hint">安全提示：Secret 默认脱敏展示，请勿通过邮件等形式对外明文转发密钥。</div>
           </div>
-          <div class="meta-row">
-            <span>同步时间 <strong class="mono">2026-09-11 10:08:22</strong></span>
-            <span>状态 <strong>生效中</strong></span>
+
+          <div class="cred-mode" id="newCredentials" hidden>
+            <div class="cred-grid">
+              <div class="field-row">
+                <label>APPID</label>
+                <div class="key-summary">
+                  <strong class="mono" id="appId">dg_app_20260911001</strong>
+                  <small>由 DeepGrow 自动生成</small>
+                </div>
+                <button type="button" class="btn" data-copy="appId" data-copy-label="APPID">复制</button>
+              </div>
+              <div class="field-row">
+                <label>商户公钥</label>
+                <div class="key-summary" id="merchantKeySummary">
+                  <strong id="merchantKeyName">merchant_public_key.pem</strong>
+                  <small>由商户上传，修改后实时生效</small>
+                </div>
+                <div style="display:flex;gap:8px;">
+                  <input class="file-input" id="merchantKeyFile" type="file" accept=".pem,.pub,.cer,.crt,.txt" />
+                  <button type="button" class="btn" id="btnMerchantKeyExample">示例</button>
+                  <button type="button" class="btn" id="btnPreviewMerchantKey">预览</button>
+                  <button type="button" class="btn" id="btnCopyMerchantKey">复制</button>
+                  <button type="button" class="btn primary" id="btnUploadMerchantKey">提交/修改公钥</button>
+                </div>
+              </div>
+              <div class="field-row">
+                <label>DeepGrow 公钥</label>
+                <div class="key-summary">
+                  <strong class="mono">SHA256:8F:3A:2C:91:B0:E7:4D:6A:72:19:45:C8</strong>
+                  <small>由 DeepGrow 自动生成，不可修改</small>
+                </div>
+                <div style="display:flex;gap:8px;">
+                  <button type="button" class="btn" id="btnPreviewDeepGrowKey">预览</button>
+                  <button type="button" class="btn" data-copy="deepGrowPublicKey" data-copy-label="DeepGrow 公钥">复制</button>
+                </div>
+              </div>
+              <pre class="key-box" id="deepGrowPublicKey" hidden>-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA7DeepGrowDemo
+PublicKeyGeneratedAutomaticallyAndCannotBeModifiedByMerchant
+-----END PUBLIC KEY-----</pre>
+            </div>
+            <div class="meta-row">
+              <span>DeepGrow 公钥创建时间 <strong class="mono">2026-09-11 10:08:22</strong></span>
+            </div>
+            <div class="hint">APPID 与 DeepGrow 公钥由系统自动生成且不可修改；商户公钥与当前 APPID 绑定，由商户自行生成并上传，修改后即时生效。</div>
           </div>
-          <div class="hint">安全提示：Secret 默认脱敏展示。查看与复制将记录操作日志。请勿通过邮件明文转发密钥。</div>
         </div>
       </section>
 
@@ -292,14 +350,14 @@
       <section class="view panel" id="viewIp" hidden>
         <div class="panel-head">
           <div>
-            <h2>IP 白名单</h2>
-            <p>仅白名单内的出口 IP 可调用 DeepGrow API，保存后即时生效。</p>
+            <h2>IP 白名单-生产环境</h2>
+            <p>仅白名单内的出口 IP 可调用 DeepGrow API，提交后即时生效。</p>
           </div>
         </div>
         <div class="panel-body">
           <div class="editor">
             <input class="input mono" id="ipInput" placeholder="请输入 IPv4，例如 203.0.113.10" />
-            <button type="button" class="btn primary" id="btnAddIp">添加</button>
+            <button type="button" class="btn primary" id="btnAddIp">添加并提交</button>
           </div>
           <div id="ipEmpty" class="empty" hidden>暂无白名单。未配置时，生产 API 调用将被拒绝。</div>
           <table class="table" id="ipTable">
@@ -313,9 +371,6 @@
             </thead>
             <tbody id="ipBody"></tbody>
           </table>
-          <div class="form-actions">
-            <button type="button" class="btn primary" id="btnSaveIp">保存白名单</button>
-          </div>
         </div>
       </section>
 
@@ -323,23 +378,15 @@
       <section class="view panel" id="viewCallback" hidden>
         <div class="panel-head">
           <div>
-            <h2>回调地址</h2>
+            <h2>回调地址-生产环境</h2>
             <p>DeepGrow 将向以下 HTTPS 地址推送异步通知。请确保服务可验签并按约定返回成功。</p>
           </div>
         </div>
         <div class="panel-body">
           <form class="form-grid" id="callbackForm">
             <label class="form-item">
-              <span>支付结果通知 URL</span>
-              <input class="input" id="payNotify" type="url" placeholder="https://merchant.example.com/notify/pay" required />
-            </label>
-            <label class="form-item">
-              <span>退款结果通知 URL</span>
-              <input class="input" id="refundNotify" type="url" placeholder="https://merchant.example.com/notify/refund" />
-            </label>
-            <label class="form-item">
-              <span>备注（可选）</span>
-              <input class="input" id="cbNote" type="text" placeholder="如：生产回调，对接人张三" />
+              <span>（支付/退款/拒付）回调地址 URL</span>
+              <input class="input" id="notifyUrl" type="url" placeholder="https://merchant.example.com/notify" required />
             </label>
             <div class="hint">仅支持 HTTPS。保存后即时生效；在途通知默认打「最新已保存地址」。</div>
             <div class="form-actions">
@@ -374,21 +421,63 @@
     </div>
   </div>
 
+  <div class="modal-mask" id="merchantKeyPreviewModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="merchantKeyPreviewTitle">
+      <h3 id="merchantKeyPreviewTitle">预览商户公钥</h3>
+      <p id="merchantKeyPreviewName">merchant_public_key.pem</p>
+      <pre class="key-box" id="merchantKeyPreview"></pre>
+      <div class="modal-actions" style="margin-top:16px;">
+        <button type="button" class="btn" id="merchantKeyPreviewClose">关闭</button>
+        <button type="button" class="btn primary" id="merchantKeyPreviewCopy">复制公钥</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="deepGrowKeyPreviewModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="deepGrowKeyPreviewTitle">
+      <h3 id="deepGrowKeyPreviewTitle">预览 DeepGrow 公钥</h3>
+      <p>该公钥由 DeepGrow 自动生成，不可修改。</p>
+      <pre class="key-box" id="deepGrowKeyPreview"></pre>
+      <div class="modal-actions" style="margin-top:16px;">
+        <button type="button" class="btn" id="deepGrowKeyPreviewClose">关闭</button>
+        <button type="button" class="btn primary" id="deepGrowKeyPreviewCopy">复制公钥</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="merchantKeyExampleModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="merchantKeyExampleTitle">
+      <h3 id="merchantKeyExampleTitle">商户公钥示例</h3>
+      <p>请上传 PEM 格式的公钥文件，文件内容格式如下：</p>
+      <pre class="key-box" id="merchantKeyExample">-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAMerchantPublic
+KeyExampleOnlyPleaseReplaceWithYourOwnGeneratedPublicKey
+-----END PUBLIC KEY-----</pre>
+      <div class="modal-actions" style="margin-top:16px;">
+        <button type="button" class="btn" id="merchantKeyExampleClose">关闭</button>
+        <button type="button" class="btn primary" id="merchantKeyExampleCopy">复制示例</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast" hidden></div>
 
   <script>
     const SECRET = "dg_secret_9c2e1a74f8b03d55e6a1c0b7d4e8392f";
     const state = {
       revealed: false,
+      credentialSystem: "legacy",
+      merchantPublicKey: `-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAMerchantDemo
+PublicKeyGeneratedAndUploadedByMerchant
+-----END PUBLIC KEY-----`,
       pendingDeleteIpIndex: null,
       ips: [
         { ip: "203.0.113.10", at: "2026-09-11 10:20:01", by: "Demo Merchant" },
         { ip: "198.51.100.24", at: "2026-09-11 10:21:18", by: "Demo Merchant" },
       ],
       callbacks: {
-        pay: "https://merchant.example.com/notify/pay",
-        refund: "https://merchant.example.com/notify/refund",
-        note: "生产回调",
+        url: "https://merchant.example.com/notify",
       },
     };
 
@@ -408,15 +497,13 @@
       $("#viewCallback").hidden = name !== "callback";
     }
 
-    function renderStatus() {
-      const ipOk = state.ips.length > 0;
-      const cbOk = Boolean(state.callbacks.pay && state.callbacks.pay.startsWith("https://"));
-      const ipEl = $("#statusIp");
-      const cbEl = $("#statusCb");
-      ipEl.textContent = ipOk ? `已配置 ${state.ips.length} 条` : "未配置";
-      ipEl.className = `pill ${ipOk ? "ok" : "warn"}`;
-      cbEl.textContent = cbOk ? "已配置" : "未配置";
-      cbEl.className = `pill ${cbOk ? "ok" : "warn"}`;
+    function switchCredentialSystem(system) {
+      state.credentialSystem = system;
+      document.querySelectorAll("[data-system]").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.system === system);
+      });
+      $("#legacyCredentials").hidden = system !== "legacy";
+      $("#newCredentials").hidden = system !== "new";
     }
 
     function renderIps() {
@@ -427,7 +514,6 @@
         empty.hidden = false;
         table.hidden = true;
         body.innerHTML = "";
-        renderStatus();
         return;
       }
       empty.hidden = true;
@@ -440,14 +526,10 @@
           <td><button type="button" class="btn danger" data-del-ip="${idx}">删除</button></td>
         </tr>
       `).join("");
-      renderStatus();
     }
 
     function fillCallbacks() {
-      $("#payNotify").value = state.callbacks.pay || "";
-      $("#refundNotify").value = state.callbacks.refund || "";
-      $("#cbNote").value = state.callbacks.note || "";
-      renderStatus();
+      $("#notifyUrl").value = state.callbacks.url || "";
     }
 
     function nowStamp() {
@@ -466,11 +548,15 @@
       tab.addEventListener("click", () => switchTab(tab.dataset.tab));
     });
 
+    document.querySelectorAll("[data-system]").forEach((btn) => {
+      btn.addEventListener("click", () => switchCredentialSystem(btn.dataset.system));
+    });
+
     document.querySelectorAll("[data-copy]").forEach((btn) => {
       btn.addEventListener("click", async () => {
         const id = btn.getAttribute("data-copy");
         await navigator.clipboard.writeText($("#" + id).textContent.trim());
-        toast("已复制 App Key");
+        toast(`已复制 ${btn.getAttribute("data-copy-label") || "内容"}`);
       });
     });
 
@@ -500,6 +586,62 @@
       toast("已复制 App Secret");
     });
 
+    $("#btnPreviewDeepGrowKey").addEventListener("click", () => {
+      $("#deepGrowKeyPreview").textContent = $("#deepGrowPublicKey").textContent.trim();
+      $("#deepGrowKeyPreviewModal").hidden = false;
+    });
+    $("#deepGrowKeyPreviewClose").addEventListener("click", () => {
+      $("#deepGrowKeyPreviewModal").hidden = true;
+    });
+    $("#deepGrowKeyPreviewCopy").addEventListener("click", async () => {
+      await navigator.clipboard.writeText($("#deepGrowPublicKey").textContent.trim());
+      toast("已复制 DeepGrow 公钥");
+    });
+
+    $("#btnUploadMerchantKey").addEventListener("click", () => {
+      $("#merchantKeyFile").click();
+    });
+    $("#btnMerchantKeyExample").addEventListener("click", () => {
+      $("#merchantKeyExampleModal").hidden = false;
+    });
+    $("#merchantKeyExampleClose").addEventListener("click", () => {
+      $("#merchantKeyExampleModal").hidden = true;
+    });
+    $("#merchantKeyExampleCopy").addEventListener("click", async () => {
+      await navigator.clipboard.writeText($("#merchantKeyExample").textContent.trim());
+      toast("已复制商户公钥示例");
+    });
+    $("#btnPreviewMerchantKey").addEventListener("click", () => {
+      $("#merchantKeyPreviewName").textContent = $("#merchantKeyName").textContent;
+      $("#merchantKeyPreview").textContent = state.merchantPublicKey;
+      $("#merchantKeyPreviewModal").hidden = false;
+    });
+    $("#merchantKeyPreviewClose").addEventListener("click", () => {
+      $("#merchantKeyPreviewModal").hidden = true;
+    });
+    $("#btnCopyMerchantKey").addEventListener("click", async () => {
+      await navigator.clipboard.writeText(state.merchantPublicKey);
+      toast("已复制商户公钥");
+    });
+    $("#merchantKeyPreviewCopy").addEventListener("click", async () => {
+      await navigator.clipboard.writeText(state.merchantPublicKey);
+      toast("已复制商户公钥");
+    });
+    $("#merchantKeyFile").addEventListener("change", async () => {
+      const file = $("#merchantKeyFile").files?.[0];
+      if (!file) return;
+      const content = await file.text();
+      if (!content.includes("PUBLIC KEY")) {
+        toast("文件内容不是有效的公钥，请上传 PEM 公钥文件");
+        $("#merchantKeyFile").value = "";
+        return;
+      }
+      state.merchantPublicKey = content;
+      $("#merchantKeyName").textContent = file.name;
+      toast("商户公钥已修改并即时生效");
+      $("#merchantKeyFile").value = "";
+    });
+
     $("#btnAddIp").addEventListener("click", () => {
       const ip = $("#ipInput").value.trim();
       if (!isValidIpv4(ip)) { toast("请输入合法 IPv4 地址"); return; }
@@ -507,7 +649,7 @@
       state.ips.unshift({ ip, at: nowStamp(), by: "Demo Merchant" });
       $("#ipInput").value = "";
       renderIps();
-      toast("已添加，请点击保存生效");
+      toast("已添加并提交，即时生效");
     });
     $("#ipBody").addEventListener("click", (e) => {
       const btn = e.target.closest("[data-del-ip]");
@@ -516,7 +658,7 @@
       const row = state.ips[idx];
       if (!row) return;
       state.pendingDeleteIpIndex = idx;
-      $("#deleteIpDesc").innerHTML = `确认删除 IP <strong class="mono">${row.ip}</strong>？删除后该 IP 将无法调用 DeepGrow API，需点击「保存白名单」后生效。`;
+      $("#deleteIpDesc").innerHTML = `确认删除 IP <strong class="mono">${row.ip}</strong>？删除后该 IP 将无法调用 DeepGrow API，提交后即时生效。`;
       $("#deleteIpModal").hidden = false;
     });
     $("#deleteIpCancel").addEventListener("click", () => {
@@ -531,28 +673,20 @@
       state.pendingDeleteIpIndex = null;
       $("#deleteIpModal").hidden = true;
       renderIps();
-      toast(removed ? `已删除 ${removed.ip}，请点击保存生效` : "已删除，请点击保存生效");
-    });
-    $("#btnSaveIp").addEventListener("click", () => {
-      if (!state.ips.length) { toast("请至少配置 1 条 IP 白名单"); return; }
-      toast("IP 白名单已保存并即时生效");
-      renderStatus();
+      toast(removed ? `已删除 ${removed.ip}，即时生效` : "已删除，即时生效");
     });
 
     $("#callbackForm").addEventListener("submit", (e) => {
       e.preventDefault();
-      const pay = $("#payNotify").value.trim();
-      const refund = $("#refundNotify").value.trim();
-      if (!pay.startsWith("https://")) { toast("支付回调必须为 HTTPS"); return; }
-      if (refund && !refund.startsWith("https://")) { toast("退款回调必须为 HTTPS"); return; }
-      state.callbacks = { pay, refund, note: $("#cbNote").value.trim() };
-      renderStatus();
+      const url = $("#notifyUrl").value.trim();
+      if (!url.startsWith("https://")) { toast("回调地址必须为 HTTPS"); return; }
+      state.callbacks = { url };
       toast("回调地址已保存并即时生效");
     });
     $("#btnResetCb").addEventListener("click", () => fillCallbacks());
     $("#btnTestCallback").addEventListener("click", () => {
-      if (!state.callbacks.pay) { toast("请先配置支付回调地址"); switchTab("callback"); return; }
-      toast("已向支付回调地址发送测试通知");
+      if (!state.callbacks.url) { toast("请先配置回调地址"); switchTab("callback"); return; }
+      toast("已向回调地址发送测试通知");
     });
     $("#btnDocs").addEventListener("click", () => toast("原型：跳转 API 文档（示意）"));
 
